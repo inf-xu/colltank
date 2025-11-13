@@ -109,3 +109,10 @@ This file provides guidance to Codex when working with code in this repository.
 - 分析状态管理与依赖注入一致性
 - 优化渲染性能（const 使用、rebuild 控制）
 - 配置日志与崩溃上报系统
+
+### 功能实现步骤
+- 实现功能之前需要阅读document/目录中的文件，首先是功能描述文件document/feature.md和目录结构文件document/directory.md，如果设计数据库数据模型码需要参考document/database.md。编码过程中如果安装了三方库，需要把命令记录到document/thirdparty.md中。
+- 实现功能之后，将具体实现的功能点记录到document/feature.md中。
+
+### bug修复步骤
+- 需要把bug描述和修复逻辑记录到document/fix.md文件。
