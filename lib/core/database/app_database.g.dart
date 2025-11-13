@@ -8711,3 +8711,20 @@ mixin _$HighlightSlotsDaoMixin on DatabaseAccessor<AppDatabase> {
   $CollectiblesTable get collectibles => attachedDatabase.collectibles;
   $HighlightSlotsTable get highlightSlots => attachedDatabase.highlightSlots;
 }
+mixin _$MetricsDaoMixin on DatabaseAccessor<AppDatabase> {
+  $FrameStylesTable get frameStyles => attachedDatabase.frameStyles;
+  $CollectionsTable get collections => attachedDatabase.collections;
+  $CollectiblesTable get collectibles => attachedDatabase.collectibles;
+  $CollectionDailyMetricsTable get collectionDailyMetrics =>
+      attachedDatabase.collectionDailyMetrics;
+  $StorageSnapshotsTable get storageSnapshots =>
+      attachedDatabase.storageSnapshots;
+}
+mixin _$ExportLogsDaoMixin on DatabaseAccessor<AppDatabase> {
+  $FrameStylesTable get frameStyles => attachedDatabase.frameStyles;
+  $CollectionsTable get collections => attachedDatabase.collections;
+  $ExportLogsTable get exportLogs => attachedDatabase.exportLogs;
+}
+mixin _$PreferencesDaoMixin on DatabaseAccessor<AppDatabase> {
+  $AppPreferencesTable get appPreferences => attachedDatabase.appPreferences;
+}

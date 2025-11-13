@@ -6,6 +6,12 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 part 'app_database.g.dart';
+part 'daos/collections/collections_dao.dart';
+part 'daos/collectibles/collectibles_dao.dart';
+part 'daos/highlight_slots/highlight_slots_dao.dart';
+part 'daos/metrics/metrics_dao.dart';
+part 'daos/export/export_logs_dao.dart';
+part 'daos/preferences/preferences_dao.dart';
 
 /// 默认使用 LazyDatabase，将数据库文件放在应用文档目录
 LazyDatabase _openConnection() {
@@ -31,6 +37,9 @@ LazyDatabase _openConnection() {
     CollectionsDao,
     CollectiblesDao,
     HighlightSlotsDao,
+    MetricsDao,
+    ExportLogsDao,
+    PreferencesDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -47,6 +56,9 @@ class AppDatabase extends _$AppDatabase {
   late final CollectionsDao collectionsDao = CollectionsDao(this);
   late final CollectiblesDao collectiblesDao = CollectiblesDao(this);
   late final HighlightSlotsDao highlightSlotsDao = HighlightSlotsDao(this);
+  late final MetricsDao metricsDao = MetricsDao(this);
+  late final ExportLogsDao exportLogsDao = ExportLogsDao(this);
+  late final PreferencesDao preferencesDao = PreferencesDao(this);
 }
 
 /// 收集罐类别表
@@ -180,107 +192,4 @@ class AppPreferences extends Table {
   DateTimeColumn get lastDirectoryCheckAt => dateTime().nullable()();
   IntColumn get totalStorageBytes => integer().nullable()();
   BoolColumn get analyticsOptIn => boolean().withDefault(const Constant(false))();
-}
-
-/// 收集罐 DAO：封装数据聚合与 Freezed 映射
-@DriftAccessor(tables: [Collections, Collectibles])
-class CollectionsDao extends DatabaseAccessor<AppDatabase>
-    with _$CollectionsDaoMixin {
-  CollectionsDao(AppDatabase db) : super(db);
-
-  Future<int> insertCollection(CollectionsCompanion companion) =>
-      into(collections).insert(companion);
-
-  Future<List<CollectionRow>> allCollectionsRaw() =>
-      (select(collections)..orderBy([(tbl) => OrderingTerm.desc(tbl.sortIndex)]))
-          .get();
-
-  Future<List<MapEntry<int, int>>> _collectCounts() async {
-    final countExpr = collectibles.id.count();
-    final rows = await (selectOnly(collectibles)
-          ..addColumns([collectibles.collectionId, countExpr])
-          ..groupBy([collectibles.collectionId]))
-        .get();
-    return rows
-        .map(
-          (row) => MapEntry(
-            row.read(collectibles.collectionId)!,
-            row.read(countExpr) ?? 0,
-          ),
-        )
-        .toList();
-  }
-
-  Future<List<CollectionRowWithCount>> fetchCollectionRowsWithCount() async {
-    final rawRows = await allCollectionsRaw();
-    final countMap = <int, int>{};
-    for (final entry in await _collectCounts()) {
-      countMap[entry.key] = entry.value;
-    }
-    return rawRows
-        .map(
-          (data) => CollectionRowWithCount(
-            row: data,
-            itemCount: countMap[data.id] ?? 0,
-          ),
-        )
-        .toList();
-  }
-}
-
-/// 收藏物品 DAO：负责插入与按类别查询
-@DriftAccessor(tables: [Collectibles])
-class CollectiblesDao extends DatabaseAccessor<AppDatabase>
-    with _$CollectiblesDaoMixin {
-  CollectiblesDao(AppDatabase db) : super(db);
-
-  Future<int> insertCollectible(CollectiblesCompanion companion) =>
-      into(collectibles).insert(companion);
-
-  Future<List<CollectibleRow>> listByCollection(int collectionId) {
-    return (select(collectibles)
-          ..where((tbl) => tbl.collectionId.equals(collectionId)))
-        .get();
-  }
-}
-
-/// 画框槽位 DAO：保证槽位唯一并支持 upsert
-@DriftAccessor(tables: [HighlightSlots])
-class HighlightSlotsDao extends DatabaseAccessor<AppDatabase>
-    with _$HighlightSlotsDaoMixin {
-  HighlightSlotsDao(AppDatabase db) : super(db);
-
-  Future<void> upsertSlot({
-    required int collectionId,
-    required int slotIndex,
-    int? collectibleId,
-    bool isLocked = false,
-  }) async {
-    final record = HighlightSlotsCompanion(
-      collectionId: Value(collectionId),
-      slotIndex: Value(slotIndex),
-      collectibleId: Value(collectibleId),
-      isLocked: Value(isLocked),
-      updatedAt: Value(DateTime.now()),
-    );
-    await into(highlightSlots).insertOnConflictUpdate(record);
-  }
-
-  Future<List<HighlightSlotRow>> listSlots(int collectionId) {
-    return (select(highlightSlots)
-          ..where((tbl) => tbl.collectionId.equals(collectionId))
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.slotIndex)]))
-        .get();
-  }
-}
-
-/// DAO 查询结果的轻量封装，避免核心层直接依赖 UI 实体
-class CollectionRowWithCount {
-  const CollectionRowWithCount({
-    required this.row,
-    required this.itemCount,
-  });
-
-  final CollectionRow row;
-  final int itemCount;
 }
