@@ -68,4 +68,8 @@ class CollectiblesRepository {
       sortWeight: sortWeight,
     );
   }
+
+  Stream<DateTime?> watchLatestCapturedAt(int collectionId) {
+    return _collectiblesDao.watchLatestCapturedAt(collectionId);
+  }
 }

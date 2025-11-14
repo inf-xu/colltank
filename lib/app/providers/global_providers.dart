@@ -12,6 +12,7 @@ import '../../features/collections/domain/usecases/collections/delete_collection
 import '../../features/collections/domain/usecases/collections/reorder_collections_usecase.dart';
 import '../../features/collections/domain/usecases/collections/switch_frame_style_usecase.dart';
 import '../../features/collections/domain/usecases/collections/update_cover_preview_usecase.dart';
+import '../../features/collections/domain/usecases/collections/update_collection_usecase.dart';
 import '../../features/collections/domain/usecases/collectibles/add_collectible_usecase.dart';
 import '../../features/collections/domain/usecases/collectibles/toggle_collectible_highlight_usecase.dart';
 import '../../features/collections/domain/usecases/highlight_slots/assign_highlight_slot_usecase.dart';
@@ -96,6 +97,13 @@ final switchFrameStyleUsecaseProvider =
 final updateCoverPreviewUsecaseProvider =
     Provider<UpdateCoverPreviewUsecase>((ref) {
   return UpdateCoverPreviewUsecase(
+    ref.watch(collectionsRepositoryProvider),
+  );
+});
+
+final updateCollectionUsecaseProvider =
+    Provider<UpdateCollectionUsecase>((ref) {
+  return UpdateCollectionUsecase(
     ref.watch(collectionsRepositoryProvider),
   );
 });

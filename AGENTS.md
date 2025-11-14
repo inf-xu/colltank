@@ -116,3 +116,6 @@ This file provides guidance to Codex when working with code in this repository.
 
 ### bug修复步骤
 - 需要把bug描述和修复逻辑记录到document/fix.md文件。
+
+### 过期方法
+- Colors 的withOpacity(xx)已过时，采用with.withValues(alpha: xx)

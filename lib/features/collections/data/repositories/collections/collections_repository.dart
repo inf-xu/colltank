@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Value;
+
 import '../../../domain/entities/collection_models.dart';
 import '../../../../../core/database/app_database.dart';
 
@@ -71,5 +73,26 @@ class CollectionsRepository {
   Future<List<CollectionEntity>> searchByKeyword(String keyword) async {
     final rows = await _collectionsDao.searchByKeyword(keyword);
     return rows.map((row) => row.toEntity(itemCount: 0)).toList();
+  }
+
+  Future<bool> existsByName(String name) async {
+    final row = await _collectionsDao.findByName(name);
+    return row != null;
+  }
+
+  Future<void> updateCollection(CollectionEntity entity) {
+    final id = entity.id;
+    if (id == null) {
+      throw ArgumentError('Collection id is required for update');
+    }
+    return _collectionsDao.updateCollectionValues(
+      id: id,
+      companion: CollectionsCompanion(
+        name: Value(entity.name),
+        description: Value(entity.description),
+        accentColor: Value(entity.accentColor),
+        updatedAt: Value(entity.updatedAt),
+      ),
+    );
   }
 }

@@ -25,6 +25,7 @@ import 'package:colltank/features/collections/domain/usecases/export/log_export_
 import 'package:colltank/features/settings/data/repositories/preferences/preferences_repository.dart';
 import 'package:colltank/features/settings/domain/usecases/preferences/update_import_mode_usecase.dart';
 import 'package:colltank/features/settings/domain/usecases/preferences/update_root_directory_usecase.dart';
+import 'package:colltank/features/collections/domain/exceptions/collection_exceptions.dart';
 
 void main() {
   setUpAll(() {
@@ -70,6 +71,19 @@ void main() {
       final id = await usecase.call(_collection('旅行', frameStyleId));
       final slots = await highlightSlotsRepository.listSlots(id);
       expect(slots, hasLength(9));
+    });
+
+    test('create collection throws when name exists', () async {
+      final usecase = CreateCollectionUsecase(
+        collectionsRepository,
+        highlightSlotsRepository,
+      );
+      final entity = _collection('重复', frameStyleId);
+      await usecase.call(entity);
+      await expectLater(
+        () => usecase.call(entity),
+        throwsA(isA<CollectionNameExistsException>()),
+      );
     });
 
     test('delete + reorder + switch style + cover preview', () async {

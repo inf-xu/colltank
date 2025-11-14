@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/calendar/presentation/pages/calendar_page.dart';
+import '../../features/collections/presentation/pages/add_collection_page.dart';
 import '../../features/collections/presentation/pages/detail_page.dart';
 import '../../features/collections/presentation/pages/home_page.dart';
+import '../../features/collections/presentation/widgets/collections_drawer.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../shell/app_shell_scope.dart';
 import 'routes.dart';
+import '../../features/collections/domain/entities/collection_models.dart';
 
 GoRouter createAppRouter() {
   return GoRouter(
@@ -51,6 +55,17 @@ GoRouter createAppRouter() {
         ],
       ),
       GoRoute(
+        path: AppRoute.createCollectionPath,
+        name: AppRoute.createCollection,
+        builder: (context, state) {
+          final extra = state.extra;
+          return AddCollectionPage(
+            initialCollection:
+                extra is CollectionEntity ? extra : null,
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoute.detailPath,
         name: AppRoute.detail,
         builder: (context, state) {
@@ -65,9 +80,11 @@ GoRouter createAppRouter() {
 
 /// Shell 层：负责底部导航与内容切换
 class AppShell extends StatelessWidget {
-  const AppShell({super.key, required this.navigationShell});
+  AppShell({super.key, required this.navigationShell})
+      : _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final StatefulNavigationShell navigationShell;
+  final GlobalKey<ScaffoldState> _scaffoldKey;
 
   void _onTap(int index) {
     navigationShell.goBranch(
@@ -78,25 +95,30 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: _onTap,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: '首页',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: '日历',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: '我的',
-          ),
-        ],
+    return AppShellScope(
+      openDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: const CollectionsDrawer(),
+        body: navigationShell,
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: navigationShell.currentIndex,
+          onTap: _onTap,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              label: '首页',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_outlined),
+              label: '日历',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: '我的',
+            ),
+          ],
+        ),
       ),
     );
   }

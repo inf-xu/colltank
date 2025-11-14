@@ -28,6 +28,11 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
+  Future<CollectionRow?> findByName(String name) {
+    return (select(collections)..where((tbl) => tbl.name.equals(name)))
+        .getSingleOrNull();
+  }
+
   Future<List<CollectionRow>> allCollectionsRaw() =>
       (select(collections)..orderBy([(tbl) => OrderingTerm.desc(tbl.sortIndex)]))
           .get();
@@ -109,6 +114,15 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
             (tbl) => tbl.name.like(like) | tbl.description.like(like),
           ))
         .get();
+  }
+
+  Future<void> updateCollectionValues({
+    required int id,
+    required CollectionsCompanion companion,
+  }) {
+    return (update(collections)..where((tbl) => tbl.id.equals(id))).write(
+      companion,
+    );
   }
 
   Future<Map<int, int>> _countByCollection(Iterable<int> ids) async {

@@ -96,4 +96,13 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Stream<DateTime?> watchLatestCapturedAt(int collectionId) {
+    final query = (select(collectibles)
+          ..where((tbl) => tbl.collectionId.equals(collectionId))
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.capturedAt)])
+          ..limit(1))
+        .watchSingleOrNull();
+    return query.map((row) => row?.capturedAt);
+  }
 }
