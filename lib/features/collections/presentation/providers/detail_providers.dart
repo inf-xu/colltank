@@ -18,3 +18,13 @@ final collectionGalleryProvider =
       final repository = ref.watch(collectiblesRepositoryProvider);
       return repository.watchByCollection(collectionId);
     });
+
+/// 画框九宫格槽位监听
+final collectionHighlightSlotsProvider =
+    StreamProvider.family<List<HighlightSlotEntity>, int>((
+      ref,
+      collectionId,
+    ) {
+      final repository = ref.watch(highlightSlotsRepositoryProvider);
+      return repository.watchSlots(collectionId);
+    });

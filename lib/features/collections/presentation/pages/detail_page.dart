@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../../app/providers/global_providers.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/color_utils.dart';
 import '../../../settings/providers/preferences_providers.dart';
@@ -35,6 +36,9 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     final galleryAsync = ref.watch(
       collectionGalleryProvider(widget.collectionId),
     );
+    final highlightSlotsAsync = ref.watch(
+      collectionHighlightSlotsProvider(widget.collectionId),
+    );
     final prefsAsync = ref.watch(appPreferencesProvider);
     final title = collectionAsync.value?.name ?? '收集罐 #${widget.collectionId}';
     final accent = parseHexColor(
@@ -53,6 +57,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
             collection: collection,
             accent: accent,
             galleryAsync: galleryAsync,
+            slotsAsync: highlightSlotsAsync,
             prefsAsync: prefsAsync,
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -77,6 +82,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     required CollectionEntity? collection,
     required Color accent,
     required AsyncValue<List<CollectibleEntity>> galleryAsync,
+    required AsyncValue<List<HighlightSlotEntity>> slotsAsync,
     required AsyncValue<AppPreferenceRow> prefsAsync,
   }) {
     final userDescription = collection?.description?.trim();
@@ -93,9 +99,22 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
           flex: 5,
           child: Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: _FrameCanvasPlaceholder(accentColor: accent),
+            child: slotsAsync.when(
+              data: (slots) {
+                final galleryItems = galleryAsync.asData?.value ?? const [];
+                final slotMap = _indexCollectibles(galleryItems);
+                return _FrameCanvasBoard(
+                  accentColor: accent,
+                  collectionId: collection?.id ?? widget.collectionId,
+                  slots: slots,
+                  collectiblesById: slotMap,
+                  rootDirectory: rootDirectory,
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(
+                child: Text('画框加载失败：$error'),
+              ),
             ),
           ),
         ),
@@ -236,40 +255,264 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
   }
 }
 
-/// 画框占位：复用首页缩略图的 3×3 样式，保证 1:1 比例
-class _FrameCanvasPlaceholder extends StatelessWidget {
-  const _FrameCanvasPlaceholder({required this.accentColor});
+/// 画框 3×3 画布：承载拖拽目标
+class _FrameCanvasBoard extends ConsumerStatefulWidget {
+  const _FrameCanvasBoard({
+    required this.accentColor,
+    required this.collectionId,
+    required this.slots,
+    required this.collectiblesById,
+    required this.rootDirectory,
+  });
 
   final Color accentColor;
+  final int collectionId;
+  final List<HighlightSlotEntity> slots;
+  final Map<int, CollectibleEntity> collectiblesById;
+  final String? rootDirectory;
+
+  @override
+  ConsumerState<_FrameCanvasBoard> createState() => _FrameCanvasBoardState();
+}
+
+class _FrameCanvasBoardState extends ConsumerState<_FrameCanvasBoard> {
+  int? _editingSlot;
+
+  void _setEditing(int? slot) {
+    if (_editingSlot == slot) return;
+    setState(() => _editingSlot = slot);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = widget.accentColor;
+    final rootDirectory = widget.rootDirectory;
+    final slotByIndex = {
+      for (final slot in widget.slots) slot.slotIndex: slot,
+    };
+    final assignSlot = ref.read(assignHighlightSlotUsecaseProvider);
+    return GestureDetector(
+      onTap: () => _setEditing(null),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: GridView.builder(
+            padding: const EdgeInsets.all(8),
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: 9,
+            itemBuilder: (context, index) {
+              final slot = slotByIndex[index];
+              final occupant = slot?.collectibleId == null
+                  ? null
+                  : widget.collectiblesById[slot!.collectibleId!];
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onLongPress:
+                    occupant != null ? () => _setEditing(index) : null,
+                child: DragTarget<CollectibleEntity>(
+                  onWillAcceptWithDetails: (details) {
+                    final candidate = details.data;
+                    return (slot?.isLocked ?? false)
+                            ? false
+                            : candidate.id != null;
+                  },
+                  onAcceptWithDetails: (details) async {
+                    final collectibleId = details.data.id;
+                    if (collectibleId == null) return;
+                    await assignSlot(
+                      collectionId: widget.collectionId,
+                      slotIndex: index,
+                      collectibleId: collectibleId,
+                    );
+                    _setEditing(null);
+                  },
+                  builder: (context, candidateData, rejectedData) {
+                    final isHighlighted = candidateData.isNotEmpty;
+                    final isLocked = slot?.isLocked ?? false;
+                    return _CanvasSlotTile(
+                      slotIndex: index,
+                      accentColor: accentColor,
+                      collectible: occupant,
+                      rootDirectory: rootDirectory,
+                      isHighlighted: isHighlighted,
+                      isLocked: isLocked,
+                      showRemove: _editingSlot == index && occupant != null,
+                      onRemove: occupant == null
+                          ? null
+                          : () async {
+                              await assignSlot(
+                                collectionId: widget.collectionId,
+                                slotIndex: index,
+                                collectibleId: null,
+                              );
+                              _setEditing(null);
+                            },
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CanvasSlotTile extends StatelessWidget {
+  const _CanvasSlotTile({
+    required this.slotIndex,
+    required this.accentColor,
+    required this.collectible,
+    required this.rootDirectory,
+    required this.isHighlighted,
+    required this.isLocked,
+    required this.showRemove,
+    required this.onRemove,
+  });
+
+  final int slotIndex;
+  final Color accentColor;
+  final CollectibleEntity? collectible;
+  final String? rootDirectory;
+  final bool isHighlighted;
+  final bool isLocked;
+  final bool showRemove;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = isHighlighted
+        ? accentColor.withValues(alpha: 0.25)
+        : accentColor.withValues(alpha: 0.12);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (collectible != null)
+              _CanvasImagePreview(
+                collectible: collectible!,
+                rootDirectory: rootDirectory,
+              )
+            else
+              _CanvasPlaceholder(slotIndex: slotIndex),
+            if (isLocked)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Icon(
+                  Icons.lock,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+            if (showRemove)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black.withValues(alpha: 0.6),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(28, 28),
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: onRemove,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CanvasImagePreview extends StatelessWidget {
+  const _CanvasImagePreview({
+    required this.collectible,
+    required this.rootDirectory,
+  });
+
+  final CollectibleEntity collectible;
+  final String? rootDirectory;
+
+  @override
+  Widget build(BuildContext context) {
+    final absolutePath =
+        _resolveAbsolutePath(rootDirectory, collectible.relativePath);
+    if (absolutePath == null) {
+      return const _CanvasMissingIndicator(message: '未设置目录');
+    }
+    final file = File(absolutePath);
+    if (!file.existsSync()) {
+      return const _CanvasMissingIndicator(message: '文件缺失');
+    }
+    return Image.file(
+      file,
+      fit: BoxFit.cover,
+    );
+  }
+}
+
+class _CanvasPlaceholder extends StatelessWidget {
+  const _CanvasPlaceholder({required this.slotIndex});
+
+  final int slotIndex;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.transparent, width: 2),
-      ),
-      padding: const EdgeInsets.all(6),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 6,
+      color: Colors.black.withValues(alpha: 0.04),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.image, color: Colors.white70),
+            const SizedBox(height: 4),
+          ],
         ),
-        itemBuilder: (context, index) {
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Center(
-              child: Icon(Icons.image, size: 32, color: Colors.white),
-            ),
-          );
-        },
-        itemCount: 9,
+      ),
+    );
+  }
+}
+
+class _CanvasMissingIndicator extends StatelessWidget {
+  const _CanvasMissingIndicator({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.35),
+      child: Center(
+        child: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+          ),
+        ),
       ),
     );
   }
@@ -358,35 +601,138 @@ class _CollectibleGrid extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        final absolutePath = _resolveAbsolutePath(item);
+        final absolutePath =
+            _resolveAbsolutePath(rootDirectory, item.relativePath);
         final file = absolutePath != null ? File(absolutePath) : null;
         final exists = file?.existsSync() ?? false;
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: exists
-              ? Image.file(file!, fit: BoxFit.cover)
-              : Container(
-                  color: Colors.grey.shade300,
-                  child: Center(
-                    child: Text(
-                      '文件缺失',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                ),
+        return _DraggableCollectibleTile(
+          item: item,
+          file: exists ? file : null,
+          missingLabel: absolutePath == null ? '未设置目录' : '文件缺失',
         );
       },
     );
   }
+}
 
-  String? _resolveAbsolutePath(CollectibleEntity item) {
-    if (rootDirectory == null || rootDirectory!.isEmpty) {
-      return null;
+class _DraggableCollectibleTile extends StatelessWidget {
+  const _DraggableCollectibleTile({
+    required this.item,
+    required this.file,
+    required this.missingLabel,
+  });
+
+  final CollectibleEntity item;
+  final File? file;
+  final String missingLabel;
+
+  bool get _canDrag => (item.id != null) && item.allowHighlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = Container(
+      color: Colors.grey.shade300,
+      child: Center(
+        child: Text(
+          missingLabel,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+    final tile = ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: file != null
+          ? Image.file(file!, fit: BoxFit.cover)
+          : placeholder,
+    );
+    if (!_canDrag) {
+      return tile;
     }
-    return p.join(rootDirectory!, item.relativePath);
+    return LongPressDraggable<CollectibleEntity>(
+      data: item,
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: _DragPreview(
+        file: file,
+        label: item.displayName,
+      ),
+      maxSimultaneousDrags: 1,
+      childWhenDragging: Opacity(
+        opacity: 0.2,
+        child: tile,
+      ),
+      child: tile,
+    );
+  }
+}
+
+class _DragPreview extends StatelessWidget {
+  const _DragPreview({required this.file, required this.label});
+
+  final File? file;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        width: 120,
+        height: 120,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            // border: Border.all(color: Colors.white, width: 2),
+            // boxShadow: const [
+            //   BoxShadow(
+            //     color: Colors.black38,
+            //     blurRadius: 12,
+            //     offset: Offset(0, 6),
+            //   ),
+            // ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (file != null)
+                  Image.file(file!, fit: BoxFit.cover)
+                else
+                  Container(
+                    color: Colors.grey.shade400,
+                    child: const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: Colors.white,
+                    ),
+                  ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    color: Colors.black54,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -406,4 +752,24 @@ class _EmptyGalleryPlaceholder extends StatelessWidget {
       ),
     );
   }
+}
+
+Map<int, CollectibleEntity> _indexCollectibles(
+  List<CollectibleEntity> items,
+) {
+  final map = <int, CollectibleEntity>{};
+  for (final item in items) {
+    final id = item.id;
+    if (id != null) {
+      map[id] = item;
+    }
+  }
+  return map;
+}
+
+String? _resolveAbsolutePath(String? rootDirectory, String relativePath) {
+  if (rootDirectory == null || rootDirectory.isEmpty) {
+    return null;
+  }
+  return p.join(rootDirectory, relativePath);
 }
