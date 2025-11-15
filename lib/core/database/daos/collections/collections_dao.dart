@@ -20,8 +20,26 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
   Future<int> insertCollection(CollectionsCompanion companion) =>
       into(collections).insert(companion);
 
-  Future<int> deleteCollection(int id) =>
-      (delete(collections)..where((tbl) => tbl.id.equals(id))).go();
+  Future<void> deleteCollection(int id) async {
+    final db = attachedDatabase;
+    await transaction(() async {
+      await (db.delete(db.highlightSlots)
+            ..where((tbl) => tbl.collectionId.equals(id)))
+          .go();
+      await (delete(collectibles)..where((tbl) => tbl.collectionId.equals(id)))
+          .go();
+      await (db.delete(db.collectionDailyMetrics)
+            ..where((tbl) => tbl.collectionId.equals(id)))
+          .go();
+      await (db.delete(db.exportLogs)
+            ..where((tbl) => tbl.collectionId.equals(id)))
+          .go();
+      await (db.delete(db.storageSnapshots)
+            ..where((tbl) => tbl.collectionId.equals(id)))
+          .go();
+      await (delete(collections)..where((tbl) => tbl.id.equals(id))).go();
+    });
+  }
 
   Future<CollectionRow?> findById(int id) {
     return (select(collections)..where((tbl) => tbl.id.equals(id)))
