@@ -103,6 +103,12 @@
 - 浮动按钮上传图片流程新增手动裁剪页面，基于 `crop_your_image` 提供 1:1 可视化裁剪，支持拖动、缩放与重置区域。
 - 原自动裁剪逻辑下线，所有图片均由用户确认后再落盘，避免被动裁剪导致内容缺失。
 
+## 2025-11-15 画框导出到相册
+- 详情页画布外层新增 `RepaintBoundary`，导出时捕获高分辨率 PNG，失败会给出友好提示。
+- 集成 `gal` 插件，实现相册写入与权限申请，仅支持 Android 平台，保存到 “CollTank” 相册。
+- 新增 `CollageExportService` 将“相册写入 + 导出日志”封装为单个事务，记录导出文件名、分辨率与大小。
+- 导出按钮具备 Loading 状态，导出后使用 Snackbar 告知用户结果。
+
 ## 2025-11-15 画框拖拽替换
 - 新增 `collectionHighlightSlotsProvider` 实时监听 3×3 槽位状态，并与 Drift 高亮表保持同步。
 - 详情页画框区替换为 DragTarget 九宫格，空位提示拖拽指引，投放后调用 `AssignHighlightSlotUsecase` 自动写库。

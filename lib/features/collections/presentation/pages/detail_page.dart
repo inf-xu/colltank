@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
@@ -9,6 +12,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/color_utils.dart';
 import '../../../settings/providers/preferences_providers.dart';
 import '../../domain/entities/collection_models.dart';
+import '../controllers/collage_export_service.dart';
 import '../controllers/collectible_import_controller.dart';
 import '../providers/detail_providers.dart';
 
@@ -27,6 +31,9 @@ class CollectionDetailPage extends ConsumerStatefulWidget {
 
 class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
   bool _isImporting = false;
+  bool _isExporting = false;
+  final GlobalKey _canvasKey = GlobalKey();
+  int? _editingSlotIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -103,12 +110,20 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
               data: (slots) {
                 final galleryItems = galleryAsync.asData?.value ?? const [];
                 final slotMap = _indexCollectibles(galleryItems);
-                return _FrameCanvasBoard(
-                  accentColor: accent,
-                  collectionId: collection?.id ?? widget.collectionId,
-                  slots: slots,
-                  collectiblesById: slotMap,
-                  rootDirectory: rootDirectory,
+                return GestureDetector(
+                  onTap: () => _setEditingSlot(null),
+                  child: RepaintBoundary(
+                    key: _canvasKey,
+                    child: _FrameCanvasBoard(
+                      accentColor: accent,
+                      collectionId: collection?.id ?? widget.collectionId,
+                      slots: slots,
+                      collectiblesById: slotMap,
+                      rootDirectory: rootDirectory,
+                      editingSlotIndex: _editingSlotIndex,
+                      onEditingSlotChanged: _setEditingSlot,
+                    ),
+                  ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -137,9 +152,15 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                   elevation: 0,
                   shadowColor: Colors.transparent,
                 ),
-                onPressed: () => _showWorkInProgress('导出拼贴'),
-                icon: const Icon(Icons.download_outlined),
-                label: const Text('导出拼贴'),
+                onPressed: _isExporting ? null : _handleExport,
+                icon: _isExporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_outlined),
+                label: Text(_isExporting ? '导出中...' : '导出拼贴'),
               ),
             ],
           ),
@@ -192,6 +213,62 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
         setState(() => _isImporting = false);
       }
     }
+  }
+
+  Future<void> _handleExport() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final snapshot = await _captureCanvas();
+      final service = CollageExportService(ref);
+      final result = await service.saveToGallery(
+        collectionId: widget.collectionId,
+        bytes: snapshot.bytes,
+        width: snapshot.width,
+        height: snapshot.height,
+      );
+      if (!mounted) return;
+      _showSnack('已保存到相册：${result.fileName}');
+    } on CanvasCaptureException catch (error) {
+      if (!mounted) return;
+      _showSnack(error.toString());
+    } on CollageExportException catch (error) {
+      if (!mounted) return;
+      _showSnack(error.toString());
+    } catch (error) {
+      if (!mounted) return;
+      _showSnack('导出失败：$error');
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  Future<_CapturedCanvas> _captureCanvas() async {
+    final boundary =
+        _canvasKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) {
+      throw const CanvasCaptureException('画布未就绪，请稍后再试');
+    }
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio * 2;
+    final image = await boundary.toImage(pixelRatio: pixelRatio);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) {
+      throw const CanvasCaptureException('导出图像数据为空，请重试');
+    }
+    return _CapturedCanvas(
+      bytes: byteData.buffer.asUint8List(),
+      width: image.width,
+      height: image.height,
+    );
+  }
+
+  void _setEditingSlot(int? slotIndex) {
+    if (_editingSlotIndex == slotIndex) {
+      return;
+    }
+    setState(() => _editingSlotIndex = slotIndex);
   }
 
   Future<void> _selectDirectory() async {
@@ -256,13 +333,15 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
 }
 
 /// 画框 3×3 画布：承载拖拽目标
-class _FrameCanvasBoard extends ConsumerStatefulWidget {
+class _FrameCanvasBoard extends ConsumerWidget {
   const _FrameCanvasBoard({
     required this.accentColor,
     required this.collectionId,
     required this.slots,
     required this.collectiblesById,
     required this.rootDirectory,
+    required this.editingSlotIndex,
+    required this.onEditingSlotChanged,
   });
 
   final Color accentColor;
@@ -270,98 +349,83 @@ class _FrameCanvasBoard extends ConsumerStatefulWidget {
   final List<HighlightSlotEntity> slots;
   final Map<int, CollectibleEntity> collectiblesById;
   final String? rootDirectory;
+  final int? editingSlotIndex;
+  final ValueChanged<int?> onEditingSlotChanged;
 
   @override
-  ConsumerState<_FrameCanvasBoard> createState() => _FrameCanvasBoardState();
-}
-
-class _FrameCanvasBoardState extends ConsumerState<_FrameCanvasBoard> {
-  int? _editingSlot;
-
-  void _setEditing(int? slot) {
-    if (_editingSlot == slot) return;
-    setState(() => _editingSlot = slot);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final accentColor = widget.accentColor;
-    final rootDirectory = widget.rootDirectory;
-    final slotByIndex = {
-      for (final slot in widget.slots) slot.slotIndex: slot,
-    };
+  Widget build(BuildContext context, WidgetRef ref) {
+    final slotByIndex = {for (final slot in slots) slot.slotIndex: slot};
     final assignSlot = ref.read(assignHighlightSlotUsecaseProvider);
-    return GestureDetector(
-      onTap: () => _setEditing(null),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: accentColor.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
+    return AspectRatio(
+      aspectRatio: 1,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: accentColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: GridView.builder(
+          padding: const EdgeInsets.all(8),
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
           ),
-          child: GridView.builder(
-            padding: const EdgeInsets.all(8),
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: 9,
-            itemBuilder: (context, index) {
-              final slot = slotByIndex[index];
-              final occupant = slot?.collectibleId == null
-                  ? null
-                  : widget.collectiblesById[slot!.collectibleId!];
-              return GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onLongPress:
-                    occupant != null ? () => _setEditing(index) : null,
-                child: DragTarget<CollectibleEntity>(
-                  onWillAcceptWithDetails: (details) {
-                    final candidate = details.data;
-                    return (slot?.isLocked ?? false)
-                            ? false
-                            : candidate.id != null;
-                  },
-                  onAcceptWithDetails: (details) async {
-                    final collectibleId = details.data.id;
-                    if (collectibleId == null) return;
-                    await assignSlot(
-                      collectionId: widget.collectionId,
-                      slotIndex: index,
-                      collectibleId: collectibleId,
-                    );
-                    _setEditing(null);
-                  },
-                  builder: (context, candidateData, rejectedData) {
-                    final isHighlighted = candidateData.isNotEmpty;
-                    final isLocked = slot?.isLocked ?? false;
-                    return _CanvasSlotTile(
-                      slotIndex: index,
-                      accentColor: accentColor,
-                      collectible: occupant,
-                      rootDirectory: rootDirectory,
-                      isHighlighted: isHighlighted,
-                      isLocked: isLocked,
-                      showRemove: _editingSlot == index && occupant != null,
-                      onRemove: occupant == null
-                          ? null
-                          : () async {
-                              await assignSlot(
-                                collectionId: widget.collectionId,
-                                slotIndex: index,
-                                collectibleId: null,
-                              );
-                              _setEditing(null);
-                            },
-                    );
-                  },
-                ),
-              );
-            },
-          ),
+          itemCount: 9,
+          itemBuilder: (context, index) {
+            final slot = slotByIndex[index];
+            final occupant = slot?.collectibleId == null
+                ? null
+                : collectiblesById[slot!.collectibleId!];
+            final isLocked = slot?.isLocked ?? false;
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => onEditingSlotChanged(null),
+              onLongPress: occupant != null && !isLocked
+                  ? () => onEditingSlotChanged(index)
+                  : null,
+              child: DragTarget<CollectibleEntity>(
+                onWillAcceptWithDetails: (details) {
+                  final candidate = details.data;
+                  return isLocked ? false : candidate.id != null;
+                },
+                onAcceptWithDetails: (details) async {
+                  final collectibleId = details.data.id;
+                  if (collectibleId == null) return;
+                  await assignSlot(
+                    collectionId: collectionId,
+                    slotIndex: index,
+                    collectibleId: collectibleId,
+                  );
+                  onEditingSlotChanged(null);
+                },
+                builder: (context, candidateData, rejectedData) {
+                  final isHighlighted = candidateData.isNotEmpty;
+                  final showRemove =
+                      editingSlotIndex == index && occupant != null && !isLocked;
+                  return _CanvasSlotTile(
+                    slotIndex: index,
+                    accentColor: accentColor,
+                    collectible: occupant,
+                    rootDirectory: rootDirectory,
+                    isHighlighted: isHighlighted,
+                    isLocked: isLocked,
+                    showRemove: showRemove,
+                    onRemove: showRemove
+                        ? () async {
+                            await assignSlot(
+                              collectionId: collectionId,
+                              slotIndex: index,
+                              collectibleId: null,
+                            );
+                            onEditingSlotChanged(null);
+                          }
+                        : null,
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );
@@ -578,6 +642,27 @@ class _CollectionDescriptionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CapturedCanvas {
+  const _CapturedCanvas({
+    required this.bytes,
+    required this.width,
+    required this.height,
+  });
+
+  final Uint8List bytes;
+  final int width;
+  final int height;
+}
+
+class CanvasCaptureException implements Exception {
+  const CanvasCaptureException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 class _CollectibleGrid extends StatelessWidget {
