@@ -209,7 +209,7 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
           height: 48,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: customColor ?? theme.colorScheme.surfaceVariant,
+            color: customColor ?? theme.colorScheme.surfaceContainerHighest,
             border: Border.all(
               color: selected
                   ? theme.colorScheme.primary
@@ -333,7 +333,8 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
   }
 
   String _colorToHex(Color color) {
-    final rgb = color.value.toRadixString(16).padLeft(8, '0').substring(2);
+    final argb = color.toARGB32();
+    final rgb = (argb & 0x00FFFFFF).toRadixString(16).padLeft(6, '0');
     return '#${rgb.toUpperCase()}';
   }
 

@@ -4,7 +4,7 @@ part of 'package:colltank/core/database/app_database.dart';
 @DriftAccessor(tables: [CollectionDailyMetrics, StorageSnapshots])
 class MetricsDao extends DatabaseAccessor<AppDatabase>
     with _$MetricsDaoMixin {
-  MetricsDao(AppDatabase db) : super(db);
+  MetricsDao(super.db);
 
   Future<void> incrementDailyMetric({
     int? collectionId,
@@ -15,7 +15,7 @@ class MetricsDao extends DatabaseAccessor<AppDatabase>
   }) async {
     final dateOnly = DateTime(statDate.year, statDate.month, statDate.day);
     await transaction(() async {
-      final filter = (CollectionDailyMetrics tbl) =>
+      Expression<bool> filter(CollectionDailyMetrics tbl) =>
           (collectionId == null
                   ? tbl.collectionId.isNull()
                   : tbl.collectionId.equals(collectionId)) &

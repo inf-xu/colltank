@@ -1,7 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:async/async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/open.dart' as sqlite_open;
 

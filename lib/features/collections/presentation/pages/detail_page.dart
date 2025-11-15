@@ -151,6 +151,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     setState(() => _isImporting = true);
     try {
       final result = await service.importFromGallery(
+        context: context,
         collectionId: widget.collectionId,
       );
       if (!mounted) return;
@@ -161,9 +162,6 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     } on MediaPermissionDeniedException {
       if (!mounted) return;
       _showSnack('请在系统设置授予照片读取权限');
-    } on ImageProcessingException catch (error) {
-      if (!mounted) return;
-      _showSnack('裁剪失败：$error');
     } on UserAbortedImportException {
       if (!mounted) return;
       _showSnack('已取消选择图片');

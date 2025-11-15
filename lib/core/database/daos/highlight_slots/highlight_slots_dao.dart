@@ -4,7 +4,7 @@ part of 'package:colltank/core/database/app_database.dart';
 @DriftAccessor(tables: [HighlightSlots])
 class HighlightSlotsDao extends DatabaseAccessor<AppDatabase>
     with _$HighlightSlotsDaoMixin {
-  HighlightSlotsDao(AppDatabase db) : super(db);
+  HighlightSlotsDao(super.db);
 
   Future<void> upsertSlot({
     required int collectionId,
@@ -35,7 +35,7 @@ class HighlightSlotsDao extends DatabaseAccessor<AppDatabase>
           .write(
         HighlightSlotsCompanion(
           collectibleId: Value(collectibleId),
-          isLocked: isLocked == null ? const Value.absent() : Value(isLocked!),
+          isLocked: isLocked == null ? const Value.absent() : Value(isLocked),
           updatedAt: Value(now),
         ),
       );

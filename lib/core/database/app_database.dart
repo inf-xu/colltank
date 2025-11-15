@@ -5,6 +5,8 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+// ignore_for_file: overridden_fields
+
 part 'app_database.g.dart';
 part 'daos/collections/collections_dao.dart';
 part 'daos/collectibles/collectibles_dao.dart';
@@ -45,7 +47,7 @@ LazyDatabase _openConnection() {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : this._(_openConnection());
 
-  AppDatabase._(QueryExecutor executor) : super(executor);
+  AppDatabase._(super.executor);
 
   AppDatabase.memory() : this._(NativeDatabase.memory());
 
@@ -53,8 +55,11 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 1;
 
   /// DAO 实例暴露给业务层使用
+  @override
   late final CollectionsDao collectionsDao = CollectionsDao(this);
+  @override
   late final CollectiblesDao collectiblesDao = CollectiblesDao(this);
+  @override
   late final HighlightSlotsDao highlightSlotsDao = HighlightSlotsDao(this);
   late final MetricsDao metricsDao = MetricsDao(this);
   late final ExportLogsDao exportLogsDao = ExportLogsDao(this);

@@ -4,7 +4,7 @@ part of 'package:colltank/core/database/app_database.dart';
 @DriftAccessor(tables: [AppPreferences])
 class PreferencesDao extends DatabaseAccessor<AppDatabase>
     with _$PreferencesDaoMixin {
-  PreferencesDao(AppDatabase db) : super(db);
+  PreferencesDao(super.db);
 
   Future<AppPreferenceRow> loadOrCreate() async {
     final existing = await select(appPreferences).getSingleOrNull();

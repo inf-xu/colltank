@@ -1,11 +1,10 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
@@ -13,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../app/providers/global_providers.dart';
 import '../../../settings/providers/preferences_providers.dart';
 import '../../domain/entities/collection_models.dart';
+import '../widgets/manual_crop_page.dart';
 
 /// 图片导入结果模型
 class CollectibleImportResult {
@@ -33,15 +33,21 @@ class CollectibleImportService {
   final ImagePicker _picker;
 
   Future<CollectibleImportResult> importFromGallery({
+    required BuildContext context,
     required int collectionId,
   }) async {
+    final navigator = Navigator.of(context);
     final rootDirectory = await _loadRootDirectory();
     await _ensureMediaPermission();
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked == null) {
       throw const UserAbortedImportException();
     }
-    final croppedBytes = await _cropToSquare(await picked.readAsBytes());
+    final originalBytes = await picked.readAsBytes();
+    final croppedBytes = await _requestManualCrop(
+      navigator: navigator,
+      sourceBytes: originalBytes,
+    );
     final savedFile = await _persistFile(
       bytes: croppedBytes,
       rootDirectory: rootDirectory,
@@ -165,23 +171,23 @@ class CollectibleImportService {
     await addUsecase.call(entity);
   }
 
-  Future<Uint8List> _cropToSquare(Uint8List source) async {
-    final decoded = img.decodeImage(source);
-    if (decoded == null) {
-      throw const ImageProcessingException('无法解析图片');
+  Future<Uint8List> _requestManualCrop({
+    required NavigatorState navigator,
+    required Uint8List sourceBytes,
+  }) async {
+    if (!navigator.mounted) {
+      throw const UserAbortedImportException();
     }
-    final edge = math.min(decoded.width, decoded.height);
-    final offsetX = ((decoded.width - edge) / 2).round();
-    final offsetY = ((decoded.height - edge) / 2).round();
-    final cropped = img.copyCrop(
-      decoded,
-      x: offsetX,
-      y: offsetY,
-      width: edge,
-      height: edge,
+    final cropped = await navigator.push<Uint8List>(
+      MaterialPageRoute(
+        builder: (_) => CollectibleManualCropPage(imageBytes: sourceBytes),
+        fullscreenDialog: true,
+      ),
     );
-    final encoded = img.encodeJpg(cropped, quality: 92);
-    return Uint8List.fromList(encoded);
+    if (cropped == null) {
+      throw const UserAbortedImportException();
+    }
+    return cropped;
   }
 
   String _resolveDisplayName(String path) {
@@ -237,15 +243,6 @@ class MediaPermissionDeniedException implements Exception {
 
   @override
   String toString() => '未授予照片访问权限';
-}
-
-class ImageProcessingException implements Exception {
-  const ImageProcessingException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
 }
 
 class UserAbortedImportException implements Exception {

@@ -4,7 +4,7 @@ part of 'package:colltank/core/database/app_database.dart';
 @DriftAccessor(tables: [ExportLogs])
 class ExportLogsDao extends DatabaseAccessor<AppDatabase>
     with _$ExportLogsDaoMixin {
-  ExportLogsDao(AppDatabase db) : super(db);
+  ExportLogsDao(super.db);
 
   Future<int> insertLog(ExportLogsCompanion companion) =>
       into(exportLogs).insert(companion);

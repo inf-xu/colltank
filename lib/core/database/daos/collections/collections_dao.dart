@@ -12,7 +12,7 @@ class CollectionRowWithCount {
 @DriftAccessor(tables: [Collections, Collectibles])
 class CollectionsDao extends DatabaseAccessor<AppDatabase>
     with _$CollectionsDaoMixin {
-  CollectionsDao(AppDatabase db) : super(db);
+  CollectionsDao(super.db);
 
   Future<int> insertCollection(CollectionsCompanion companion) =>
       into(collections).insert(companion);

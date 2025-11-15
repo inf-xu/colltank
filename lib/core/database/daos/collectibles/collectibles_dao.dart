@@ -4,7 +4,7 @@ part of 'package:colltank/core/database/app_database.dart';
 @DriftAccessor(tables: [Collectibles])
 class CollectiblesDao extends DatabaseAccessor<AppDatabase>
     with _$CollectiblesDaoMixin {
-  CollectiblesDao(AppDatabase db) : super(db);
+  CollectiblesDao(super.db);
 
   Future<int> insertCollectible(CollectiblesCompanion companion) =>
       into(collectibles).insert(companion);

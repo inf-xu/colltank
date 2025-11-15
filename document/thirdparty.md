@@ -54,3 +54,8 @@ flutter pub add image
 ```
 flutter pub add path
 ```
+
+## crop_your_image
+```
+flutter pub add crop_your_image
+```
