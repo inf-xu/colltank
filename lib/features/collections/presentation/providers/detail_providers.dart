@@ -28,3 +28,10 @@ final collectionHighlightSlotsProvider =
       final repository = ref.watch(highlightSlotsRepositoryProvider);
       return repository.watchSlots(collectionId);
     });
+
+/// 单个收藏物详情
+final collectibleDetailProvider =
+    StreamProvider.family<CollectibleEntity?, int>((ref, collectibleId) {
+      final repository = ref.watch(collectiblesRepositoryProvider);
+      return repository.watchById(collectibleId);
+    });

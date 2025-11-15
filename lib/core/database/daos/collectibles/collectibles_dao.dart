@@ -105,4 +105,43 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
         .watchSingleOrNull();
     return query.map((row) => row?.capturedAt);
   }
+
+  Future<CollectibleRow?> findById(int id) {
+    return (select(collectibles)..where((tbl) => tbl.id.equals(id)))
+        .getSingleOrNull();
+  }
+
+  Stream<CollectibleRow?> watchById(int id) {
+    return (select(collectibles)..where((tbl) => tbl.id.equals(id)))
+        .watchSingleOrNull();
+  }
+
+  Future<void> updateMeta({
+    required int id,
+    String? displayName,
+    String? story,
+    int? moodCodePoint,
+    String? moodFontFamily,
+    String? moodPackage,
+    String? moodColor,
+  }) async {
+    await (update(collectibles)..where((tbl) => tbl.id.equals(id))).write(
+      CollectiblesCompanion(
+        displayName:
+            displayName == null ? const Value.absent() : Value(displayName),
+        story: story == null ? const Value.absent() : Value(story),
+        moodCodePoint: moodCodePoint == null
+            ? const Value.absent()
+            : Value(moodCodePoint),
+        moodFontFamily: moodFontFamily == null
+            ? const Value.absent()
+            : Value(moodFontFamily),
+        moodPackage:
+            moodPackage == null ? const Value.absent() : Value(moodPackage),
+        moodColor:
+            moodColor == null ? const Value.absent() : Value(moodColor),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
 }

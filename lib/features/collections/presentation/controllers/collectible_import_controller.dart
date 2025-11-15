@@ -157,7 +157,7 @@ class CollectibleImportService {
       moodCodePoint: CupertinoIcons.heart.codePoint,
       moodFontFamily: CupertinoIcons.heart.fontFamily ?? 'CupertinoIcons',
       moodPackage: CupertinoIcons.heart.fontPackage,
-      moodColor: '#FFFFFFFF',
+      moodColor: '#FFFFC107',
       capturedAt: now,
       capturedDate: capturedDate,
       allowHighlight: true,

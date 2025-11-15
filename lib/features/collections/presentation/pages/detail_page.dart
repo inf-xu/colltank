@@ -5,9 +5,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../../app/providers/global_providers.dart';
+import '../../../../app/router/routes.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/color_utils.dart';
 import '../../../settings/providers/preferences_providers.dart';
@@ -694,6 +696,13 @@ class _CollectibleGrid extends StatelessWidget {
           item: item,
           file: exists ? file : null,
           missingLabel: absolutePath == null ? '未设置目录' : '文件缺失',
+          onTap: () {
+            if (item.id != null) {
+              context.push(
+                AppRoute.collectibleDetailPathWithId(item.id!),
+              );
+            }
+          },
         );
       },
     );
@@ -705,11 +714,13 @@ class _DraggableCollectibleTile extends StatelessWidget {
     required this.item,
     required this.file,
     required this.missingLabel,
+    required this.onTap,
   });
 
   final CollectibleEntity item;
   final File? file;
   final String missingLabel;
+  final VoidCallback onTap;
 
   bool get _canDrag => (item.id != null) && item.allowHighlight;
 
@@ -731,8 +742,19 @@ class _DraggableCollectibleTile extends StatelessWidget {
     final tile = ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: file != null
-          ? Image.file(file!, fit: BoxFit.cover)
-          : placeholder,
+          ? Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.file(file!, fit: BoxFit.cover),
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(onTap: onTap),
+                  ),
+                ),
+              ],
+            )
+          : GestureDetector(onTap: onTap, child: placeholder),
     );
     if (!_canDrag) {
       return tile;

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/calendar/presentation/pages/calendar_page.dart';
 import '../../features/collections/presentation/pages/add_collection_page.dart';
 import '../../features/collections/presentation/pages/detail_page.dart';
+import '../../features/collections/presentation/pages/collectible_detail_page.dart';
 import '../../features/collections/presentation/pages/home_page.dart';
 import '../../features/collections/presentation/widgets/collections_drawer.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -72,6 +73,15 @@ GoRouter createAppRouter() {
           final rawId = state.pathParameters['id'] ?? '0';
           final id = int.tryParse(rawId) ?? 0;
           return CollectionDetailPage(collectionId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoute.collectibleDetailPath,
+        name: AppRoute.collectibleDetail,
+        builder: (context, state) {
+          final rawId = state.pathParameters['id'] ?? '0';
+          final id = int.tryParse(rawId) ?? 0;
+          return CollectibleDetailPage(collectibleId: id);
         },
       ),
     ],

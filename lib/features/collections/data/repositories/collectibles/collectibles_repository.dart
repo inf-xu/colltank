@@ -72,4 +72,35 @@ class CollectiblesRepository {
   Stream<DateTime?> watchLatestCapturedAt(int collectionId) {
     return _collectiblesDao.watchLatestCapturedAt(collectionId);
   }
+
+  Future<CollectibleEntity?> findById(int id) async {
+    final row = await _collectiblesDao.findById(id);
+    return row?.toEntity();
+  }
+
+  Stream<CollectibleEntity?> watchById(int id) {
+    return _collectiblesDao.watchById(id).map(
+          (row) => row?.toEntity(),
+        );
+  }
+
+  Future<void> updateMeta({
+    required int id,
+    String? displayName,
+    String? story,
+    int? moodCodePoint,
+    String? moodFontFamily,
+    String? moodPackage,
+    String? moodColor,
+  }) {
+    return _collectiblesDao.updateMeta(
+      id: id,
+      displayName: displayName,
+      story: story,
+      moodCodePoint: moodCodePoint,
+      moodFontFamily: moodFontFamily,
+      moodPackage: moodPackage,
+      moodColor: moodColor,
+    );
+  }
 }
