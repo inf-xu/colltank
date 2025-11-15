@@ -34,6 +34,7 @@ class CollectionDetailPage extends ConsumerStatefulWidget {
 class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
   bool _isImporting = false;
   bool _isExporting = false;
+  bool _isShuffling = false;
   final GlobalKey _canvasKey = GlobalKey();
   int? _editingSlotIndex;
 
@@ -145,9 +146,15 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                   elevation: 0,
                   shadowColor: Colors.transparent,
                 ),
-                onPressed: () => _showWorkInProgress('切换画框'),
-                icon: const Icon(Icons.photo_filter_outlined),
-                label: const Text('切换画框'),
+                onPressed: _isShuffling ? null : _shuffleHighlights,
+                icon: _isShuffling
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.shuffle),
+                label: Text(_isShuffling ? '打乱中...' : '随机打乱'),
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -247,6 +254,23 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     }
   }
 
+  Future<void> _shuffleHighlights() async {
+    setState(() => _isShuffling = true);
+    try {
+      final repository = ref.read(highlightSlotsRepositoryProvider);
+      await repository.shuffleSlots(widget.collectionId);
+      if (!mounted) return;
+      _showSnack('已随机打乱画框');
+    } catch (error) {
+      if (!mounted) return;
+      _showSnack('打乱失败：$error');
+    } finally {
+      if (mounted) {
+        setState(() => _isShuffling = false);
+      }
+    }
+  }
+
   Future<_CapturedCanvas> _captureCanvas() async {
     final boundary =
         _canvasKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
@@ -321,12 +345,6 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
         );
       },
     );
-  }
-
-  void _showWorkInProgress(String label) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$label 功能开发中')));
   }
 
   void _showSnack(String text) {
