@@ -350,6 +350,7 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? '更新收集罐' : '新建收集罐'),
+        centerTitle: true,
         actions: [
           if (_isEdit)
             IconButton(

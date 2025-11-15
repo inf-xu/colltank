@@ -465,13 +465,13 @@ class _AddCard extends StatelessWidget {
             child: InkWell(
               onTap: onTap,
               borderRadius: BorderRadius.circular(22),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.add, size: 48, color: Colors.amber),
+                    Icon(Icons.add, size: 48, color: Theme.of(context).primaryColor),
                     SizedBox(height: 12),
-                    Text('添加新的收集罐'),
+                    Text('添加收集罐'),
                   ],
                 ),
               ),
