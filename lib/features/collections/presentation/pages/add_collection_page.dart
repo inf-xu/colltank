@@ -134,9 +134,9 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
     if (!confirmed) return;
     final targetId = _editing!.id;
     if (targetId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('当前收集罐缺少 ID，无法删除')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('当前收集罐缺少 ID，无法删除')));
       return;
     }
     setState(() => _isDeleting = true);
@@ -393,6 +393,8 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
                     border: OutlineInputBorder(),
                     floatingLabelAlignment: FloatingLabelAlignment.start,
                   ),
+                  readOnly: _isEdit,
+                  enabled: !_isEdit,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return '请输入类别名称';

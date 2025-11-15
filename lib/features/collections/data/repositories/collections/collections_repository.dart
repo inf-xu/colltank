@@ -27,23 +27,25 @@ class CollectionsRepository {
     return row.toEntity(itemCount: 0);
   }
 
+  Stream<CollectionEntity?> watchById(int id) {
+    return _collectionsDao.watchById(id).map((row) {
+      return row?.toEntity(itemCount: 0);
+    });
+  }
+
   Future<List<CollectionEntity>> fetchCollectionsWithCount() async {
     final rows = await _collectionsDao.fetchCollectionRowsWithCount();
     return rows
-        .map(
-          (row) => row.row.toEntity(itemCount: row.itemCount),
-        )
+        .map((row) => row.row.toEntity(itemCount: row.itemCount))
         .toList();
   }
 
   Stream<List<CollectionEntity>> watchCollectionsWithCount() {
     return _collectionsDao.watchCollectionsWithCount().map(
-          (rows) => rows
-              .map(
-                (row) => row.row.toEntity(itemCount: row.itemCount),
-              )
-              .toList(),
-        );
+      (rows) => rows
+          .map((row) => row.row.toEntity(itemCount: row.itemCount))
+          .toList(),
+    );
   }
 
   Future<void> reorderCollections(List<int> orderedIds) {

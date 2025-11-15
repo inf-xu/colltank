@@ -79,8 +79,9 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     required AsyncValue<List<CollectibleEntity>> galleryAsync,
     required AsyncValue<AppPreferenceRow> prefsAsync,
   }) {
-    final description = (collection?.description ?? '').isNotEmpty
-        ? collection!.description!
+    final userDescription = collection?.description?.trim();
+    final description = (userDescription?.isNotEmpty ?? false)
+        ? userDescription!
         : _defaultDescription;
     final rootDirectory = prefsAsync.maybeWhen(
       data: (data) => data.rootDirectory,
@@ -129,21 +130,6 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
           child: _CollectionDescriptionCard(
             accentColor: accent,
             description: description,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: prefsAsync.when(
-            data: (prefs) => _StorageDirectoryCard(
-              path: prefs.rootDirectory,
-              onSelect: _selectDirectory,
-            ),
-            loading: () => const _StorageDirectoryCard(isLoading: true),
-            error: (error, _) => _StorageDirectoryCard(
-              isError: true,
-              errorMessage: '读取保存目录失败：$error',
-              onSelect: _selectDirectory,
-            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -345,85 +331,6 @@ class _CollectionDescriptionCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StorageDirectoryCard extends StatelessWidget {
-  const _StorageDirectoryCard({
-    this.path,
-    this.isLoading = false,
-    this.isError = false,
-    this.errorMessage,
-    this.onSelect,
-  });
-
-  final String? path;
-  final bool isLoading;
-  final bool isError;
-  final String? errorMessage;
-  final VoidCallback? onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final hasPath = (path ?? '').isNotEmpty;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(
-              Icons.folder_special_outlined,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: isLoading
-                  ? Row(
-                      children: const [
-                        SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 12),
-                        Text('正在检查保存目录...'),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          hasPath ? path! : '尚未设置图片保存目录，导入前请先选择',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (isError && errorMessage != null) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            errorMessage!,
-                            style: TextStyle(
-                              color: theme.colorScheme.error,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-            ),
-            const SizedBox(width: 12),
-            FilledButton(
-              onPressed: (isLoading || onSelect == null) ? null : onSelect,
-              child: Text(hasPath ? '变更目录' : '去设置'),
             ),
           ],
         ),

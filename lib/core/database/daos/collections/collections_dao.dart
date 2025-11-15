@@ -2,10 +2,7 @@ part of 'package:colltank/core/database/app_database.dart';
 
 /// DAO 查询结果的轻量封装，避免核心层直接依赖 UI 实体
 class CollectionRowWithCount {
-  const CollectionRowWithCount({
-    required this.row,
-    required this.itemCount,
-  });
+  const CollectionRowWithCount({required this.row, required this.itemCount});
 
   final CollectionRow row;
   final int itemCount;
@@ -23,37 +20,46 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
   Future<void> deleteCollection(int id) async {
     final db = attachedDatabase;
     await transaction(() async {
-      await (db.delete(db.highlightSlots)
-            ..where((tbl) => tbl.collectionId.equals(id)))
-          .go();
-      await (delete(collectibles)..where((tbl) => tbl.collectionId.equals(id)))
-          .go();
-      await (db.delete(db.collectionDailyMetrics)
-            ..where((tbl) => tbl.collectionId.equals(id)))
-          .go();
-      await (db.delete(db.exportLogs)
-            ..where((tbl) => tbl.collectionId.equals(id)))
-          .go();
-      await (db.delete(db.storageSnapshots)
-            ..where((tbl) => tbl.collectionId.equals(id)))
-          .go();
+      await (db.delete(
+        db.highlightSlots,
+      )..where((tbl) => tbl.collectionId.equals(id))).go();
+      await (delete(
+        collectibles,
+      )..where((tbl) => tbl.collectionId.equals(id))).go();
+      await (db.delete(
+        db.collectionDailyMetrics,
+      )..where((tbl) => tbl.collectionId.equals(id))).go();
+      await (db.delete(
+        db.exportLogs,
+      )..where((tbl) => tbl.collectionId.equals(id))).go();
+      await (db.delete(
+        db.storageSnapshots,
+      )..where((tbl) => tbl.collectionId.equals(id))).go();
       await (delete(collections)..where((tbl) => tbl.id.equals(id))).go();
     });
   }
 
   Future<CollectionRow?> findById(int id) {
-    return (select(collections)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      collections,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+  }
+
+  Stream<CollectionRow?> watchById(int id) {
+    return (select(
+      collections,
+    )..where((tbl) => tbl.id.equals(id))).watchSingleOrNull();
   }
 
   Future<CollectionRow?> findByName(String name) {
-    return (select(collections)..where((tbl) => tbl.name.equals(name)))
-        .getSingleOrNull();
+    return (select(
+      collections,
+    )..where((tbl) => tbl.name.equals(name))).getSingleOrNull();
   }
 
-  Future<List<CollectionRow>> allCollectionsRaw() =>
-      (select(collections)..orderBy([(tbl) => OrderingTerm.desc(tbl.sortIndex)]))
-          .get();
+  Future<List<CollectionRow>> allCollectionsRaw() => (select(
+    collections,
+  )..orderBy([(tbl) => OrderingTerm.desc(tbl.sortIndex)])).get();
 
   Future<List<CollectionRowWithCount>> fetchCollectionRowsWithCount() async {
     final rows = await allCollectionsRaw();
@@ -103,8 +109,9 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
     required int collectionId,
     required int frameStyleId,
   }) async {
-    await (update(collections)..where((tbl) => tbl.id.equals(collectionId)))
-        .write(
+    await (update(
+      collections,
+    )..where((tbl) => tbl.id.equals(collectionId))).write(
       CollectionsCompanion(
         frameStyleId: Value(frameStyleId),
         updatedAt: Value(DateTime.now()),
@@ -116,8 +123,9 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
     required int collectionId,
     String? previewPath,
   }) async {
-    await (update(collections)..where((tbl) => tbl.id.equals(collectionId)))
-        .write(
+    await (update(
+      collections,
+    )..where((tbl) => tbl.id.equals(collectionId))).write(
       CollectionsCompanion(
         coverPreviewPath: Value(previewPath),
         coverUpdatedAt: Value(DateTime.now()),
@@ -127,20 +135,18 @@ class CollectionsDao extends DatabaseAccessor<AppDatabase>
 
   Future<List<CollectionRow>> searchByKeyword(String keyword) {
     final like = '%$keyword%';
-    return (select(collections)
-          ..where(
-            (tbl) => tbl.name.like(like) | tbl.description.like(like),
-          ))
-        .get();
+    return (select(
+      collections,
+    )..where((tbl) => tbl.name.like(like) | tbl.description.like(like))).get();
   }
 
   Future<void> updateCollectionValues({
     required int id,
     required CollectionsCompanion companion,
   }) {
-    return (update(collections)..where((tbl) => tbl.id.equals(id))).write(
-      companion,
-    );
+    return (update(
+      collections,
+    )..where((tbl) => tbl.id.equals(id))).write(companion);
   }
 
   Future<Map<int, int>> _countByCollection(Iterable<int> ids) async {
