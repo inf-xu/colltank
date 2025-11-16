@@ -24,7 +24,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
-    _selectedDay = DateTime(_focusedDay.year, _focusedDay.month, _focusedDay.day);
+    _selectedDay = DateTime(
+      _focusedDay.year,
+      _focusedDay.month,
+      _focusedDay.day,
+    );
   }
 
   @override
@@ -32,19 +36,14 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final statsAsync = ref.watch(calendarYearlyStatsProvider(_focusedDay.year));
     final groupsAsync = ref.watch(calendarDailyGroupsProvider(_selectedDay));
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('日历'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('日历'), centerTitle: true),
       body: Column(
         children: [
           _buildCalendar(statsAsync),
           Expanded(
             child: groupsAsync.when(
-              data: (groups) => _DailyGroupsList(
-                groups: groups,
-                selectedDate: _selectedDay,
-              ),
+              data: (groups) =>
+                  _DailyGroupsList(groups: groups, selectedDate: _selectedDay),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(child: Text('加载失败：$error')),
             ),
@@ -89,7 +88,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             }),
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
-                _selectedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+                _selectedDay = DateTime(
+                  selectedDay.year,
+                  selectedDay.month,
+                  selectedDay.day,
+                );
                 _focusedDay = focusedDay;
               });
             },
@@ -138,10 +141,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '无法加载上传统计',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: theme.colorScheme.error),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
                 ),
               ),
             ),
@@ -149,7 +151,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       ),
     );
   }
-
 }
 
 class _CalendarCell extends StatelessWidget {
@@ -173,29 +174,23 @@ class _CalendarCell extends StatelessWidget {
     final baseColor = isSelected
         ? primaryColor
         : count > 0
-            ? primaryColor.withValues(alpha: 0.12)
-            : isToday
-                ? primaryColor.withValues(alpha: 0.08)
-                : Colors.transparent;
+        ? primaryColor.withValues(alpha: 0.12)
+        : isToday
+        ? primaryColor.withValues(alpha: 0.08)
+        : Colors.transparent;
     final textColor = isSelected
         ? Colors.white
         : theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     return Container(
       margin: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: baseColor,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: baseColor, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '${day.day}',
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
           ),
           if (count > 0)
             Text(
@@ -204,7 +199,7 @@ class _CalendarCell extends StatelessWidget {
                 color: textColor.withValues(alpha: 0.8),
                 fontSize: 11,
               ),
-            )
+            ),
         ],
       ),
     );
@@ -227,7 +222,7 @@ class _DailyGroupsListState extends State<_DailyGroupsList> {
   @override
   void initState() {
     super.initState();
-    _collapsed = {for (final group in widget.groups) group.collectionId: false};
+    _collapsed = {for (final group in widget.groups) group.collectionId: true};
   }
 
   @override
@@ -236,10 +231,10 @@ class _DailyGroupsListState extends State<_DailyGroupsList> {
     if (oldWidget.selectedDate != widget.selectedDate) {
       _collapsed
         ..clear()
-        ..addEntries(widget.groups.map((g) => MapEntry(g.collectionId, false)));
+        ..addEntries(widget.groups.map((g) => MapEntry(g.collectionId, true)));
     } else {
       for (final group in widget.groups) {
-        _collapsed.putIfAbsent(group.collectionId, () => false);
+        _collapsed.putIfAbsent(group.collectionId, () => true);
       }
     }
   }
@@ -298,49 +293,67 @@ class _CategoryPanel extends StatelessWidget {
               children: [
                 Text(
                   group.collectionName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: Colors.white),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
                       '${group.items.length} 件',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Colors.white),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.white),
                     ),
                     IconButton(
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                       visualDensity: VisualDensity.compact,
                       onPressed: onToggle,
-                      icon: Icon(isCollapsed ? Icons.expand_more : Icons.expand_less, color: Colors.white,),
+                      icon: Icon(
+                        isCollapsed ? Icons.expand_more : Icons.expand_less,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
             AnimatedCrossFade(
-              crossFadeState:
-                  isCollapsed ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+              crossFadeState: isCollapsed
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
               duration: const Duration(milliseconds: 200),
               firstChild: const SizedBox.shrink(),
               secondChild: Column(
                 children: group.items
-                    .map((item) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                _resolveColor(item.moodColor, accent).withValues(alpha: 0.15),
-                            child: Icon(
-                              _resolveMoodIcon(item),
-                              color: _resolveColor(item.moodColor, accent),
-                            ),
+                    .map(
+                      (item) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: CircleAvatar(
+                          backgroundColor: _resolveColor(
+                            item.moodColor,
+                            accent,
+                          ).withValues(alpha: 0.15),
+                          child: Icon(
+                            _resolveMoodIcon(item),
+                            color: _resolveColor(item.moodColor, accent),
                           ),
-                          title: Text(item.displayName, style: TextStyle(color: Colors.white),),
-                          subtitle: Text(_normalizeStory(item.story), style: TextStyle(color: Colors.white)),
-                        ))
+                        ),
+                        title: Text(
+                          item.displayName,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          _normalizeStory(item.story),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -366,7 +379,10 @@ class _EmptyHint extends StatelessWidget {
           const SizedBox(height: 12),
           Text('这天还没有收藏记录', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text(_formatDate(date), style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            _formatDate(date),
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );
