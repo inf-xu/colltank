@@ -1,12 +1,9 @@
 import '../../../data/repositories/export/export_logs_repository.dart';
-import '../../../../settings/data/repositories/preferences/preferences_repository.dart';
+import 'package:colltank/core/preferences/repositories/preferences_repository.dart';
 
 /// 画框导出完成后写日志并记录最后路径
 class LogExportUsecase {
-  LogExportUsecase(
-    this._exportLogsRepository,
-    this._preferencesRepository,
-  );
+  LogExportUsecase(this._exportLogsRepository, this._preferencesRepository);
 
   final ExportLogsRepository _exportLogsRepository;
   final PreferencesRepository _preferencesRepository;

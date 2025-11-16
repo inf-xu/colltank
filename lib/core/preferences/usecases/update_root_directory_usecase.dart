@@ -1,6 +1,6 @@
-import '../../../data/repositories/preferences/preferences_repository.dart';
+import '../repositories/preferences_repository.dart';
 
-/// 更新授权根目录
+/// 更新根目录授权的用例
 class UpdateRootDirectoryUsecase {
   UpdateRootDirectoryUsecase(this._preferencesRepository);
 

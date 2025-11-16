@@ -12,7 +12,7 @@ import '../../../../app/providers/global_providers.dart';
 import '../../../../app/router/routes.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/color_utils.dart';
-import '../../../settings/providers/preferences_providers.dart';
+import 'package:colltank/shared/providers/preferences_providers.dart';
 import '../../domain/entities/collection_models.dart';
 import '../controllers/collage_export_service.dart';
 import '../controllers/collectible_import_controller.dart';
@@ -130,9 +130,7 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Text('画框加载失败：$error'),
-              ),
+              error: (error, _) => Center(child: Text('画框加载失败：$error')),
             ),
           ),
         ),
@@ -422,7 +420,9 @@ class _FrameCanvasBoard extends ConsumerWidget {
                 builder: (context, candidateData, rejectedData) {
                   final isHighlighted = candidateData.isNotEmpty;
                   final showRemove =
-                      editingSlotIndex == index && occupant != null && !isLocked;
+                      editingSlotIndex == index &&
+                      occupant != null &&
+                      !isLocked;
                   return _CanvasSlotTile(
                     slotIndex: index,
                     accentColor: accentColor,
@@ -542,8 +542,10 @@ class _CanvasImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final absolutePath =
-        _resolveAbsolutePath(rootDirectory, collectible.relativePath);
+    final absolutePath = _resolveAbsolutePath(
+      rootDirectory,
+      collectible.relativePath,
+    );
     if (absolutePath == null) {
       return const _CanvasMissingIndicator(message: '未设置目录');
     }
@@ -551,10 +553,7 @@ class _CanvasImagePreview extends StatelessWidget {
     if (!file.existsSync()) {
       return const _CanvasMissingIndicator(message: '文件缺失');
     }
-    return Image.file(
-      file,
-      fit: BoxFit.cover,
-    );
+    return Image.file(file, fit: BoxFit.cover);
   }
 }
 
@@ -592,10 +591,7 @@ class _CanvasMissingIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           message,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 12),
         ),
       ),
     );
@@ -706,8 +702,10 @@ class _CollectibleGrid extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        final absolutePath =
-            _resolveAbsolutePath(rootDirectory, item.relativePath);
+        final absolutePath = _resolveAbsolutePath(
+          rootDirectory,
+          item.relativePath,
+        );
         final file = absolutePath != null ? File(absolutePath) : null;
         final exists = file?.existsSync() ?? false;
         return _DraggableCollectibleTile(
@@ -716,9 +714,7 @@ class _CollectibleGrid extends StatelessWidget {
           missingLabel: absolutePath == null ? '未设置目录' : '文件缺失',
           onTap: () {
             if (item.id != null) {
-              context.push(
-                AppRoute.collectibleDetailPathWithId(item.id!),
-              );
+              context.push(AppRoute.collectibleDetailPathWithId(item.id!));
             }
           },
         );
@@ -749,10 +745,7 @@ class _DraggableCollectibleTile extends StatelessWidget {
       child: Center(
         child: Text(
           missingLabel,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade700,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
           textAlign: TextAlign.center,
         ),
       ),
@@ -780,15 +773,9 @@ class _DraggableCollectibleTile extends StatelessWidget {
     return LongPressDraggable<CollectibleEntity>(
       data: item,
       dragAnchorStrategy: pointerDragAnchorStrategy,
-      feedback: _DragPreview(
-        file: file,
-        label: item.displayName,
-      ),
+      feedback: _DragPreview(file: file, label: item.displayName),
       maxSimultaneousDrags: 1,
-      childWhenDragging: Opacity(
-        opacity: 0.2,
-        child: tile,
-      ),
+      childWhenDragging: Opacity(opacity: 0.2, child: tile),
       child: tile,
     );
   }
@@ -840,14 +827,13 @@ class _DragPreview extends StatelessWidget {
                   bottom: 0,
                   child: Container(
                     color: Colors.black54,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: Text(
                       label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -879,9 +865,7 @@ class _EmptyGalleryPlaceholder extends StatelessWidget {
   }
 }
 
-Map<int, CollectibleEntity> _indexCollectibles(
-  List<CollectibleEntity> items,
-) {
+Map<int, CollectibleEntity> _indexCollectibles(List<CollectibleEntity> items) {
   final map = <int, CollectibleEntity>{};
   for (final item in items) {
     final id = item.id;

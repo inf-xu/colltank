@@ -1,6 +1,6 @@
-import '../../../../../core/database/app_database.dart';
+import '../../database/app_database.dart';
 
-/// 偏好设置 Repository：封装 app_preferences 数据访问
+/// 偏好仓储：封装 app_preferences 的增删改查
 class PreferencesRepository {
   PreferencesRepository(this._dao);
 

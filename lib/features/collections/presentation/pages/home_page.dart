@@ -9,7 +9,7 @@ import '../../../../app/router/routes.dart';
 import '../../../../app/shell/app_shell_scope.dart';
 import '../../../../shared/utils/color_utils.dart';
 import '../../domain/entities/collection_models.dart';
-import '../../../settings/providers/preferences_providers.dart';
+import 'package:colltank/shared/providers/preferences_providers.dart';
 import '../../presentation/providers/home_providers.dart';
 import '../providers/detail_providers.dart';
 

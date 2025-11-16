@@ -10,7 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../app/providers/global_providers.dart';
-import '../../../settings/providers/preferences_providers.dart';
+import 'package:colltank/shared/providers/preferences_providers.dart';
 import '../../domain/entities/collection_models.dart';
 import '../widgets/manual_crop_page.dart';
 

@@ -25,9 +25,9 @@ class CollectiblesRepository {
   }
 
   Stream<List<CollectibleEntity>> watchByCollection(int collectionId) {
-    return _collectiblesDao.watchByCollection(collectionId).map(
-          (rows) => rows.map((row) => row.toEntity()).toList(),
-        );
+    return _collectiblesDao
+        .watchByCollection(collectionId)
+        .map((rows) => rows.map((row) => row.toEntity()).toList());
   }
 
   Future<List<CollectibleEntity>> paginateByCollection({
@@ -59,14 +59,8 @@ class CollectiblesRepository {
     return _collectiblesDao.updateAllowHighlight(id, value);
   }
 
-  Future<void> updateSortWeight({
-    required int id,
-    required int sortWeight,
-  }) {
-    return _collectiblesDao.updateSortWeight(
-      id: id,
-      sortWeight: sortWeight,
-    );
+  Future<void> updateSortWeight({required int id, required int sortWeight}) {
+    return _collectiblesDao.updateSortWeight(id: id, sortWeight: sortWeight);
   }
 
   Stream<DateTime?> watchLatestCapturedAt(int collectionId) {
@@ -79,27 +73,24 @@ class CollectiblesRepository {
   }
 
   Stream<CollectibleEntity?> watchById(int id) {
-    return _collectiblesDao.watchById(id).map(
-          (row) => row?.toEntity(),
-        );
+    return _collectiblesDao.watchById(id).map((row) => row?.toEntity());
   }
 
   Stream<List<DailyCollectibleCount>> watchDailyCounts({
     required DateTime start,
     required DateTime end,
   }) {
-    return _collectiblesDao.watchDailyCounts(start: start, end: end).map(
-          (rows) => rows.map((row) => row.toEntity()).toList(),
-        );
+    return _collectiblesDao
+        .watchDailyCounts(start: start, end: end)
+        .map((rows) => rows.map((row) => row.toEntity()).toList());
   }
 
-  Stream<List<CollectibleWithCollection>>
-      watchCollectiblesWithCollectionByDate(DateTime date) {
+  Stream<List<CollectibleWithCollection>> watchCollectiblesWithCollectionByDate(
+    DateTime date,
+  ) {
     return _collectiblesDao
         .watchCollectiblesWithCollectionByDate(date)
-        .map(
-          (rows) => rows.map((row) => row.toEntity()).toList(),
-        );
+        .map((rows) => rows.map((row) => row.toEntity()).toList());
   }
 
   Future<void> updateMeta({

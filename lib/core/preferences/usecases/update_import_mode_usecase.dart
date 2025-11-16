@@ -1,6 +1,6 @@
-import '../../../data/repositories/preferences/preferences_repository.dart';
+import '../repositories/preferences_repository.dart';
 
-/// 切换导入模式（复制/移动）
+/// 更新导入策略
 class UpdateImportModeUsecase {
   UpdateImportModeUsecase(this._preferencesRepository);
 

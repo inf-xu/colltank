@@ -12,7 +12,7 @@ import 'package:colltank/features/collections/data/repositories/export/export_lo
 import 'package:colltank/features/collections/data/repositories/highlight_slots/highlight_slots_repository.dart';
 import 'package:colltank/features/collections/data/repositories/metrics/metrics_repository.dart';
 import 'package:colltank/features/collections/domain/entities/collection_models.dart';
-import 'package:colltank/features/settings/data/repositories/preferences/preferences_repository.dart';
+import 'package:colltank/core/preferences/repositories/preferences_repository.dart';
 
 void main() {
   setUpAll(() {

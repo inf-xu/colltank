@@ -21,9 +21,9 @@ import 'package:colltank/features/collections/domain/usecases/collectibles/toggl
 import 'package:colltank/features/collections/domain/usecases/highlight_slots/assign_highlight_slot_usecase.dart';
 import 'package:colltank/features/collections/domain/usecases/highlight_slots/reset_highlight_slots_usecase.dart';
 import 'package:colltank/features/collections/domain/usecases/export/log_export_usecase.dart';
-import 'package:colltank/features/settings/data/repositories/preferences/preferences_repository.dart';
-import 'package:colltank/features/settings/domain/usecases/preferences/update_import_mode_usecase.dart';
-import 'package:colltank/features/settings/domain/usecases/preferences/update_root_directory_usecase.dart';
+import 'package:colltank/core/preferences/repositories/preferences_repository.dart';
+import 'package:colltank/core/preferences/usecases/update_import_mode_usecase.dart';
+import 'package:colltank/core/preferences/usecases/update_root_directory_usecase.dart';
 import 'package:colltank/features/collections/domain/exceptions/collection_exceptions.dart';
 
 void main() {

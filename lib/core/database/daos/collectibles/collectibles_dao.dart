@@ -117,22 +117,25 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<DateTime?> watchLatestCapturedAt(int collectionId) {
-    final query = (select(collectibles)
-          ..where((tbl) => tbl.collectionId.equals(collectionId))
-          ..orderBy([(tbl) => OrderingTerm.desc(tbl.capturedAt)])
-          ..limit(1))
-        .watchSingleOrNull();
+    final query =
+        (select(collectibles)
+              ..where((tbl) => tbl.collectionId.equals(collectionId))
+              ..orderBy([(tbl) => OrderingTerm.desc(tbl.capturedAt)])
+              ..limit(1))
+            .watchSingleOrNull();
     return query.map((row) => row?.capturedAt);
   }
 
   Future<CollectibleRow?> findById(int id) {
-    return (select(collectibles)..where((tbl) => tbl.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      collectibles,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Stream<CollectibleRow?> watchById(int id) {
-    return (select(collectibles)..where((tbl) => tbl.id.equals(id)))
-        .watchSingleOrNull();
+    return (select(
+      collectibles,
+    )..where((tbl) => tbl.id.equals(id))).watchSingleOrNull();
   }
 
   Future<void> updateMeta({
@@ -146,8 +149,9 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
   }) async {
     await (update(collectibles)..where((tbl) => tbl.id.equals(id))).write(
       CollectiblesCompanion(
-        displayName:
-            displayName == null ? const Value.absent() : Value(displayName),
+        displayName: displayName == null
+            ? const Value.absent()
+            : Value(displayName),
         story: story == null ? const Value.absent() : Value(story),
         moodCodePoint: moodCodePoint == null
             ? const Value.absent()
@@ -155,10 +159,10 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
         moodFontFamily: moodFontFamily == null
             ? const Value.absent()
             : Value(moodFontFamily),
-        moodPackage:
-            moodPackage == null ? const Value.absent() : Value(moodPackage),
-        moodColor:
-            moodColor == null ? const Value.absent() : Value(moodColor),
+        moodPackage: moodPackage == null
+            ? const Value.absent()
+            : Value(moodPackage),
+        moodColor: moodColor == null ? const Value.absent() : Value(moodColor),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -195,20 +199,24 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<CollectibleWithCollectionRow>>
-      watchCollectiblesWithCollectionByDate(DateTime date) {
+  watchCollectiblesWithCollectionByDate(DateTime date) {
     final startDate = DateTime(date.year, date.month, date.day);
     final endDate = startDate.add(const Duration(days: 1));
-    final query = select(collectibles).join([
-      innerJoin(collections, collections.id.equalsExp(collectibles.collectionId)),
-    ])
-      ..where(
-        collectibles.capturedDate.isBiggerOrEqualValue(startDate) &
-            collectibles.capturedDate.isSmallerThanValue(endDate),
-      )
-      ..orderBy([
-        OrderingTerm.desc(collectibles.capturedAt),
-        OrderingTerm.desc(collectibles.sortWeight),
-      ]);
+    final query =
+        select(collectibles).join([
+            innerJoin(
+              collections,
+              collections.id.equalsExp(collectibles.collectionId),
+            ),
+          ])
+          ..where(
+            collectibles.capturedDate.isBiggerOrEqualValue(startDate) &
+                collectibles.capturedDate.isSmallerThanValue(endDate),
+          )
+          ..orderBy([
+            OrderingTerm.desc(collectibles.capturedAt),
+            OrderingTerm.desc(collectibles.sortWeight),
+          ]);
     return query.watch().map(
       (rows) => rows
           .map(

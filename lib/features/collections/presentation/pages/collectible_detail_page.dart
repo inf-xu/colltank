@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../../shared/utils/color_utils.dart';
-import '../../../settings/providers/preferences_providers.dart';
+import 'package:colltank/shared/providers/preferences_providers.dart';
 import '../../domain/entities/collection_models.dart';
 import '../providers/detail_providers.dart';
 import '../../../../app/providers/global_providers.dart';
@@ -31,7 +31,8 @@ class CollectibleDetailPage extends ConsumerWidget {
             onPressed: () async {
               final collectible = collectibleAsync.value;
               if (collectible == null) return;
-              final confirmed = await showDialog<bool>(
+              final confirmed =
+                  await showDialog<bool>(
                     context: context,
                     builder: (dialogContext) {
                       return AlertDialog(
@@ -39,11 +40,13 @@ class CollectibleDetailPage extends ConsumerWidget {
                         content: Text('确定要删除「${collectible.displayName}」吗？'),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(false),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(false),
                             child: const Text('取消'),
                           ),
                           FilledButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(true),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
                             child: const Text('删除'),
                           ),
                         ],
@@ -56,9 +59,9 @@ class CollectibleDetailPage extends ConsumerWidget {
               await repo.deleteByIds([collectible.id!]);
               if (!context.mounted) return;
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('收藏已删除')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('收藏已删除')));
             },
           ),
         ],
@@ -111,11 +114,12 @@ class _CollectibleDetailBody extends StatelessWidget {
     );
     final availablePath =
         (absolutePath != null && File(absolutePath).existsSync())
-            ? absolutePath
-            : null;
+        ? absolutePath
+        : null;
     final preset = _findMoodPreset(collectible.moodCodePoint);
     final defaultColor =
-        preset?.color ?? (collectible.moodColor.isEmpty ? '#FFFFC107' : collectible.moodColor);
+        preset?.color ??
+        (collectible.moodColor.isEmpty ? '#FFFFC107' : collectible.moodColor);
     final moodColor = parseHexColor(defaultColor);
     final moodIcon = preset?.icon ?? _resolveMoodIcon(collectible);
     return ListView(
@@ -179,10 +183,7 @@ class _CollectibleDetailBody extends StatelessWidget {
           subtitle: Text(collectible.moodColor),
         ),
         const SizedBox(height: 12),
-        Text(
-          '物语',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('物语', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Text(
           (collectible.story?.trim().isNotEmpty ?? false)
@@ -230,10 +231,7 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 16),
           const SizedBox(width: 6),
-          Text(
-            '$label：$value',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('$label：$value', style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -251,8 +249,8 @@ IconData _resolveMoodIcon(CollectibleEntity collectible) {
   final fontFamily = (collectible.moodFontFamily.isNotEmpty)
       ? collectible.moodFontFamily
       : 'MaterialIcons';
-  final fontPackage = (collectible.moodPackage != null &&
-          collectible.moodPackage!.isNotEmpty)
+  final fontPackage =
+      (collectible.moodPackage != null && collectible.moodPackage!.isNotEmpty)
       ? collectible.moodPackage
       : (fontFamily.contains('Cupertino') ? 'cupertino_icons' : null);
   return IconData(
@@ -335,9 +333,7 @@ Future<void> _showEditSheet(
                     const SizedBox(height: 16),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: '物品昵称',
-                      ),
+                      decoration: const InputDecoration(labelText: '物品昵称'),
                     ),
                     const SizedBox(height: 12),
                     const Text('物语'),
@@ -364,10 +360,7 @@ Future<void> _showEditSheet(
                             icon.codePoint == selectedCodePoint &&
                             color == selectedColor;
                         return ChoiceChip(
-                          label: Icon(
-                            icon,
-                            color: parseHexColor(color),
-                          ),
+                          label: Icon(icon, color: parseHexColor(color)),
                           selected: isSelected,
                           onSelected: (_) {
                             setState(() {
@@ -378,8 +371,9 @@ Future<void> _showEditSheet(
                               selectedColor = color;
                             });
                           },
-                          selectedColor:
-                              parseHexColor(color).withValues(alpha: 0.2),
+                          selectedColor: parseHexColor(
+                            color,
+                          ).withValues(alpha: 0.2),
                         );
                       }).toList(),
                     ),
@@ -396,24 +390,26 @@ Future<void> _showEditSheet(
                         Expanded(
                           child: FilledButton(
                             onPressed: () async {
-                            final repo =
-                                ref.read(collectiblesRepositoryProvider);
-                            await repo.updateMeta(
-                              id: collectible.id!,
-                              displayName: nameController.text.trim().isEmpty
-                                  ? '未命名收藏'
-                                  : nameController.text.trim(),
-                              story: storyController.text.trim(),
-                              moodCodePoint: selectedCodePoint,
-                              moodFontFamily: selectedFontFamily.isEmpty
-                                  ? 'MaterialIcons'
-                                  : selectedFontFamily,
-                              moodPackage: (selectedFontPackage == null ||
-                                      selectedFontPackage!.isEmpty)
-                                  ? null
-                                  : selectedFontPackage,
-                              moodColor: selectedColor,
-                            );
+                              final repo = ref.read(
+                                collectiblesRepositoryProvider,
+                              );
+                              await repo.updateMeta(
+                                id: collectible.id!,
+                                displayName: nameController.text.trim().isEmpty
+                                    ? '未命名收藏'
+                                    : nameController.text.trim(),
+                                story: storyController.text.trim(),
+                                moodCodePoint: selectedCodePoint,
+                                moodFontFamily: selectedFontFamily.isEmpty
+                                    ? 'MaterialIcons'
+                                    : selectedFontFamily,
+                                moodPackage:
+                                    (selectedFontPackage == null ||
+                                        selectedFontPackage!.isEmpty)
+                                    ? null
+                                    : selectedFontPackage,
+                                moodColor: selectedColor,
+                              );
                               if (!context.mounted) return;
                               Navigator.of(context).pop();
                               if (!context.mounted) return;
