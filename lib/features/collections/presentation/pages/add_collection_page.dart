@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers/global_providers.dart';
@@ -410,12 +411,24 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
                 TextFormField(
                   controller: _descController,
                   decoration: const InputDecoration(
-                    labelText: '描述（可选）',
+                    labelText: '描述（可选，限制80字）',
                     border: OutlineInputBorder(),
                     floatingLabelAlignment: FloatingLabelAlignment.start,
                     alignLabelWithHint: true,
                   ),
-                  maxLines: 3,
+                  minLines: 3,
+                  maxLines: 5,
+                  inputFormatters: [
+                    const _MaxLinesInputFormatter(4),
+                    LengthLimitingTextInputFormatter(80),
+                  ],
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (text.length > 80) {
+                      return '描述不应超过80个字';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
                 Text('卡片主题颜色', style: theme.textTheme.titleSmall),
@@ -466,5 +479,24 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
             backgroundColor: const Value('#FF101010'),
           ),
         );
+  }
+}
+
+/// 限制多行文本的行数，以防描述超过设计高度
+class _MaxLinesInputFormatter extends TextInputFormatter {
+  const _MaxLinesInputFormatter(this.maxLines);
+
+  final int maxLines;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final lines = '\n'.allMatches(newValue.text).length + 1;
+    if (lines > maxLines) {
+      return oldValue;
+    }
+    return newValue;
   }
 }

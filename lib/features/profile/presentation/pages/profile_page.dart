@@ -245,8 +245,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   ) {
     final totalCollections = collections.length;
     final totalPhotos = collections.fold<int>(0, (sum, e) => sum + e.itemCount);
-    final yearlyTotal = yearlyCounts.fold<int>(0, (sum, e) => sum + e.count);
-    final activeDays = yearlyCounts.where((e) => e.count > 0).length;
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     final lastSevenDaysStart = todayDate.subtract(const Duration(days: 6));
@@ -386,7 +384,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   List<Color> _buildHeatmapPalette(ThemeData theme, Color highlightColor) {
     final primary = theme.colorScheme.primary;
-    final surfaceVariant = theme.colorScheme.surfaceVariant;
+    final surfaceVariant = theme.colorScheme.surfaceContainerHighest;
     return [
       surfaceVariant.withValues(alpha: 0.45),
       primary.withValues(alpha: 0.15),
