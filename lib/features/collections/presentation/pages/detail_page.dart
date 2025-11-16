@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +30,59 @@ class CollectionDetailPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<CollectionDetailPage> createState() =>
       _CollectionDetailPageState();
+}
+
+class _DualActionFab extends StatefulWidget {
+  const _DualActionFab({
+    required this.isLoading,
+    required this.onTap,
+    required this.onLongPress,
+    required this.heroTag,
+  });
+
+  final bool isLoading;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final String heroTag;
+
+  @override
+  State<_DualActionFab> createState() => _DualActionFabState();
+}
+
+class _DualActionFabState extends State<_DualActionFab> {
+  final _longPressRecognizer = LongPressGestureRecognizer();
+
+  @override
+  void dispose() {
+    _longPressRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RawGestureDetector(
+      gestures: {
+        LongPressGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+          () => _longPressRecognizer,
+          (instance) {
+            instance.onLongPress = widget.onLongPress;
+          },
+        ),
+      },
+      child: FloatingActionButton(
+        heroTag: widget.heroTag,
+        onPressed: widget.onTap,
+        child: widget.isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              )
+            : const Icon(Icons.add_a_photo_outlined),
+      ),
+    );
+  }
 }
 
 class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
@@ -74,15 +128,15 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
           error: (error, _) => Center(child: Text('加载详情失败：$error')),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _isImporting ? null : _handleUpload,
-        child: _isImporting
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 3),
-              )
-            : const Icon(Icons.add_photo_alternate),
+      floatingActionButton: Tooltip(
+        message: '轻触相册 · 长按相机',
+        child: _DualActionFab(
+          isLoading: _isImporting,
+          onTap: _isImporting ? null : _handleUpload,
+          onLongPress:
+              _isImporting ? null : () => _handleUpload(fromCamera: true),
+          heroTag: 'detail-fab-${widget.collectionId}',
+        ),
       ),
     );
   }
@@ -193,28 +247,38 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     );
   }
 
-  Future<void> _handleUpload() async {
+  Future<void> _handleUpload({bool fromCamera = false}) async {
+    final navigator = Navigator.of(context);
     final service = CollectibleImportService(ref);
     setState(() => _isImporting = true);
     try {
-      final result = await service.importFromGallery(
-        context: context,
-        collectionId: widget.collectionId,
-      );
+      final result = fromCamera
+          ? await service.importFromCamera(
+              navigator: navigator,
+              collectionId: widget.collectionId,
+            )
+          : await service.importFromGallery(
+              navigator: navigator,
+              collectionId: widget.collectionId,
+            );
       if (!mounted) return;
-      _showSnack('图片已保存：${result.relativePath}');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '图片已保存：${result.relativePath}');
     } on RootDirectoryMissingException {
       if (!mounted) return;
       await _showDirectoryGuide();
     } on MediaPermissionDeniedException {
       if (!mounted) return;
-      _showSnack('请在系统设置授予照片读取权限');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '请在系统设置授予照片读取权限');
     } on UserAbortedImportException {
       if (!mounted) return;
-      _showSnack('已取消选择图片');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '已取消选择图片');
     } catch (error) {
       if (!mounted) return;
-      _showSnack('导入失败：$error');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '导入失败：$error');
     } finally {
       if (mounted) {
         setState(() => _isImporting = false);
@@ -235,16 +299,20 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
         height: snapshot.height,
       );
       if (!mounted) return;
-      _showSnack('已保存到相册：${result.fileName}');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '已保存到相册：${result.fileName}');
     } on CanvasCaptureException catch (error) {
       if (!mounted) return;
-      _showSnack(error.toString());
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, error.toString());
     } on CollageExportException catch (error) {
       if (!mounted) return;
-      _showSnack(error.toString());
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, error.toString());
     } catch (error) {
       if (!mounted) return;
-      _showSnack('导出失败：$error');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '导出失败：$error');
     } finally {
       if (mounted) {
         setState(() => _isExporting = false);
@@ -258,10 +326,12 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
       final repository = ref.read(highlightSlotsRepositoryProvider);
       await repository.shuffleSlots(widget.collectionId);
       if (!mounted) return;
-      _showSnack('已随机打乱画框');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '已随机打乱画框');
     } catch (error) {
       if (!mounted) return;
-      _showSnack('打乱失败：$error');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '打乱失败：$error');
     } finally {
       if (mounted) {
         setState(() => _isShuffling = false);
@@ -300,9 +370,11 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     final selected = await service.selectRootDirectory();
     if (!mounted) return;
     if (selected == null) {
-      _showSnack('已取消目录设置');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '已取消目录设置');
     } else {
-      _showSnack('已设置保存目录：$selected');
+      final messenger = ScaffoldMessenger.of(context);
+      _showSnack(messenger, '已设置保存目录：$selected');
     }
   }
 
@@ -345,8 +417,8 @@ class _CollectionDetailPageState extends ConsumerState<CollectionDetailPage> {
     );
   }
 
-  void _showSnack(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  void _showSnack(ScaffoldMessengerState messenger, String text) {
+    messenger.showSnackBar(SnackBar(content: Text(text)));
   }
 }
 

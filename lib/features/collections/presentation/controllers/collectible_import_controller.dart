@@ -33,13 +33,44 @@ class CollectibleImportService {
   final ImagePicker _picker;
 
   Future<CollectibleImportResult> importFromGallery({
-    required BuildContext context,
+    required NavigatorState navigator,
     required int collectionId,
   }) async {
-    final navigator = Navigator.of(context);
     final rootDirectory = await _loadRootDirectory();
-    await _ensureMediaPermission();
+    await _ensureMediaPermission(includeCamera: false);
     final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) {
+      throw const UserAbortedImportException();
+    }
+    final originalBytes = await picked.readAsBytes();
+    final croppedBytes = await _requestManualCrop(
+      navigator: navigator,
+      sourceBytes: originalBytes,
+    );
+    final savedFile = await _persistFile(
+      bytes: croppedBytes,
+      rootDirectory: rootDirectory,
+      collectionId: collectionId,
+    );
+    await _insertCollectible(
+      collectionId: collectionId,
+      relativePath: savedFile.relativePath,
+      absolutePath: savedFile.absolutePath,
+      displayName: _resolveDisplayName(picked.path),
+    );
+    return CollectibleImportResult(
+      relativePath: savedFile.relativePath,
+      absolutePath: savedFile.absolutePath,
+    );
+  }
+
+  Future<CollectibleImportResult> importFromCamera({
+    required NavigatorState navigator,
+    required int collectionId,
+  }) async {
+    final rootDirectory = await _loadRootDirectory();
+    await _ensureMediaPermission(includeCamera: true);
+    final picked = await _picker.pickImage(source: ImageSource.camera);
     if (picked == null) {
       throw const UserAbortedImportException();
     }
@@ -96,7 +127,7 @@ class CollectibleImportService {
     return directory.path;
   }
 
-  Future<void> _ensureMediaPermission() async {
+  Future<void> _ensureMediaPermission({required bool includeCamera}) async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
     }
@@ -107,8 +138,14 @@ class CollectibleImportService {
         Permission.videos,
         Permission.manageExternalStorage,
       });
+      if (includeCamera) {
+        permissions.add(Permission.camera);
+      }
     } else if (Platform.isIOS) {
       permissions.add(Permission.photos);
+      if (includeCamera) {
+        permissions.add(Permission.camera);
+      }
     }
     final results = await permissions.toList().request();
     final granted = results.values.any(
