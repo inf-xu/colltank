@@ -1,3 +1,4 @@
+import 'package:fl_heatmap/fl_heatmap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +16,8 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   final ScrollController _scrollController = ScrollController();
+  Key _heatmapKey = UniqueKey();
+  ProfileHeatmapItem? _selectedHeatmapItem;
 
   @override
   void dispose() {
@@ -55,6 +58,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _SectionHeader(title: '分类别统计'),
             const SizedBox(height: 12),
             _buildCategorySection(collectionsAsync),
+            const SizedBox(height: 24),
+            _SectionHeader(title: '年度热力图'),
+            const SizedBox(height: 12),
+            _buildYearlyHeatmap(context, yearlyAsync),
           ],
         ),
       ),
@@ -76,6 +83,84 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             final overview = _computeOverview(collections, yearlyCounts);
             return _StatGrid(items: overview);
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildYearlyHeatmap(
+    BuildContext context,
+    AsyncValue<List<DailyCollectibleCount>> yearlyAsync,
+  ) {
+    return yearlyAsync.when(
+      loading: () => const _SectionLoading(),
+      error: (error, _) => _ErrorCard(message: '年度热力图加载失败：$error'),
+      data: (yearlyCounts) {
+        final theme = Theme.of(context);
+        final total = yearlyCounts.fold<int>(
+          0,
+          (sum, item) => sum + item.count,
+        );
+        final activeDays = yearlyCounts.where((item) => item.count > 0).length;
+        final heatmapData = _createYearHeatmapData(
+          yearlyCounts,
+          theme,
+          _selectedHeatmapItem?.date,
+        );
+        final legendColors = _legendColors(heatmapData.colorPalette);
+        final summary = _selectedHeatmapItem == null
+            ? (total == 0 ? '本年暂无上传记录，去首页开启首次收集' : '点击任意日期查看上传数量')
+            : _formatHeatmapSelection(_selectedHeatmapItem!);
+        final subTitle = total == 0
+            ? '等待第一张照片'
+            : '累计 $total 张 · 活跃 $activeDays 天';
+        const double cellSize = 24;
+        final heatmapWidth = heatmapData.columns.length * cellSize;
+        return _CardContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                summary,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subTitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: heatmapWidth,
+                  child: Heatmap(
+                    key: _heatmapKey,
+                    heatmapData: heatmapData,
+                    showXAxisLabels: false,
+                    showYAxisLabels: false,
+                    onItemSelectedListener: (item) {
+                      if (!mounted) {
+                        return;
+                      }
+                      setState(() {
+                        _selectedHeatmapItem = item is ProfileHeatmapItem
+                            ? item
+                            : null;
+                        _heatmapKey = UniqueKey();
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _HeatLegend(colors: legendColors),
+            ],
+          ),
         );
       },
     );
@@ -145,6 +230,98 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           color: Colors.teal,
         ),
     ];
+  }
+
+  HeatmapData _createYearHeatmapData(
+    List<DailyCollectibleCount> yearlyCounts,
+    ThemeData theme,
+    DateTime? selectedDate,
+  ) {
+    final now = DateTime.now();
+    final year = now.year;
+    final columns = List<String>.generate(
+      31,
+      (index) => (index + 1).toString(),
+    );
+    final rows = List<String>.generate(12, (index) => '${index + 1}月');
+    final maxCount = yearlyCounts.fold<int>(
+      0,
+      (prev, item) => item.count > prev ? item.count : prev,
+    );
+    final highlightValue = (maxCount + 1).toDouble();
+    final highlightColor = theme.colorScheme.primary.withValues(alpha: 0.85);
+    final Map<int, int> countMap = {
+      for (final entry in yearlyCounts)
+        DateUtils.dateOnly(entry.date).millisecondsSinceEpoch: entry.count,
+    };
+    final items = <HeatmapItem>[];
+    for (var month = 1; month <= 12; month++) {
+      final days = DateUtils.getDaysInMonth(year, month);
+      for (var day = 1; day <= days; day++) {
+        final current = DateTime(year, month, day);
+        final key = DateUtils.dateOnly(current).millisecondsSinceEpoch;
+        final count = countMap[key] ?? 0;
+        final isSelected =
+            selectedDate != null && DateUtils.isSameDay(current, selectedDate);
+        items.add(
+          ProfileHeatmapItem(
+            date: current,
+            count: count,
+            displayValue: isSelected ? highlightValue : count.toDouble(),
+            unit: '张',
+            xAxisLabel: columns[day - 1],
+            yAxisLabel: rows[month - 1],
+          ),
+        );
+      }
+    }
+    return HeatmapData(
+      columns: columns,
+      rows: rows,
+      items: items,
+      colorPalette: _buildHeatmapPalette(theme, highlightColor),
+      selectedColor: highlightColor,
+      radius: 6,
+    );
+  }
+
+  List<Color> _buildHeatmapPalette(ThemeData theme, Color highlightColor) {
+    final primary = theme.colorScheme.primary;
+    final surfaceVariant = theme.colorScheme.surfaceVariant;
+    return [
+      surfaceVariant.withValues(alpha: 0.45),
+      primary.withValues(alpha: 0.15),
+      primary.withValues(alpha: 0.3),
+      primary.withValues(alpha: 0.45),
+      primary.withValues(alpha: 0.65),
+      highlightColor,
+    ];
+  }
+
+  List<Color> _legendColors(List<Color> palette) {
+    if (palette.length <= 6) {
+      return palette;
+    }
+    final step = (palette.length / 6).ceil();
+    final resolved = <Color>[];
+    for (var i = 0; i < palette.length; i += step) {
+      resolved.add(palette[i]);
+      if (resolved.length == 6) {
+        break;
+      }
+    }
+    if (resolved.length < 6) {
+      resolved.add(palette.last);
+    } else {
+      resolved[resolved.length - 1] = palette.last;
+    }
+    return resolved;
+  }
+
+  String _formatHeatmapSelection(ProfileHeatmapItem item) {
+    final dateText = '${item.date.month}月${item.date.day}日';
+    final countText = item.count;
+    return '$dateText · $countText 张';
   }
 
   Widget _buildCategorySection(
@@ -420,6 +597,73 @@ class _CategoryTile extends StatelessWidget {
             minHeight: 8,
             backgroundColor: accent.withValues(alpha: 0.12),
             valueColor: AlwaysStoppedAnimation(accent),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 自定义热力图条目，方便记录所属日期
+class ProfileHeatmapItem extends HeatmapItem {
+  const ProfileHeatmapItem({
+    required this.date,
+    required this.count,
+    required double displayValue,
+    super.unit,
+    super.xAxisLabel,
+    super.yAxisLabel,
+  }) : super(value: displayValue);
+
+  final DateTime date;
+  final int count;
+}
+
+class _HeatLegend extends StatelessWidget {
+  const _HeatLegend({required this.colors});
+
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    if (colors.length < 2) {
+      return const SizedBox.shrink();
+    }
+    return Row(
+      children: [
+        Text(
+          '少',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Row(
+            children: [
+              for (var i = 0; i < colors.length; i++)
+                Expanded(
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: colors[i],
+                      borderRadius: BorderRadius.horizontal(
+                        left: i == 0 ? const Radius.circular(4) : Radius.zero,
+                        right: i == colors.length - 1
+                            ? const Radius.circular(4)
+                            : Radius.zero,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '多',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
           ),
         ),
       ],
