@@ -162,3 +162,36 @@ extension SlotRowMapper on HighlightSlotRow {
     );
   }
 }
+
+extension DailyCollectibleCountMapper on DailyCollectibleCountRow {
+  DailyCollectibleCount toEntity() {
+    return DailyCollectibleCount(date: date, count: count);
+  }
+}
+
+extension CollectibleWithCollectionMapper on CollectibleWithCollectionRow {
+  CollectibleWithCollection toEntity() {
+    return CollectibleWithCollection(
+      collection: collection.toEntity(itemCount: 0),
+      collectible: collectible.toEntity(),
+    );
+  }
+}
+
+/// 日历/统计使用的日粒度计数模型
+@freezed
+abstract class DailyCollectibleCount with _$DailyCollectibleCount {
+  const factory DailyCollectibleCount({
+    required DateTime date,
+    required int count,
+  }) = _DailyCollectibleCount;
+}
+
+/// 收藏记录附带所属收集罐，方便日历页面按类别分组
+@freezed
+abstract class CollectibleWithCollection with _$CollectibleWithCollection {
+  const factory CollectibleWithCollection({
+    required CollectionEntity collection,
+    required CollectibleEntity collectible,
+  }) = _CollectibleWithCollection;
+}

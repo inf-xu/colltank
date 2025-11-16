@@ -1,7 +1,26 @@
 part of 'package:colltank/core/database/app_database.dart';
 
 /// 收藏物品 DAO：负责分页、筛选与基础增删改
-@DriftAccessor(tables: [Collectibles])
+/// Drift 聚合结果：记录某日新增多少条收藏
+class DailyCollectibleCountRow {
+  DailyCollectibleCountRow({required this.date, required this.count});
+
+  final DateTime date;
+  final int count;
+}
+
+/// Drift 联结结果：收藏记录 + 对应的收集罐信息
+class CollectibleWithCollectionRow {
+  CollectibleWithCollectionRow({
+    required this.collection,
+    required this.collectible,
+  });
+
+  final CollectionRow collection;
+  final CollectibleRow collectible;
+}
+
+@DriftAccessor(tables: [Collectibles, Collections])
 class CollectiblesDao extends DatabaseAccessor<AppDatabase>
     with _$CollectiblesDaoMixin {
   CollectiblesDao(super.db);
@@ -142,6 +161,63 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
             moodColor == null ? const Value.absent() : Value(moodColor),
         updatedAt: Value(DateTime.now()),
       ),
+    );
+  }
+
+  Stream<List<DailyCollectibleCountRow>> watchDailyCounts({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final startDate = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+    final endExclusive = normalizedEnd.isAfter(startDate)
+        ? normalizedEnd.add(const Duration(days: 1))
+        : startDate.add(const Duration(days: 1));
+    final countExpr = collectibles.id.count();
+    final query = selectOnly(collectibles)
+      ..addColumns([collectibles.capturedDate, countExpr])
+      ..where(
+        collectibles.capturedDate.isBiggerOrEqualValue(startDate) &
+            collectibles.capturedDate.isSmallerThanValue(endExclusive),
+      )
+      ..groupBy([collectibles.capturedDate])
+      ..orderBy([OrderingTerm.asc(collectibles.capturedDate)]);
+    return query.watch().map(
+      (rows) => rows
+          .map(
+            (row) => DailyCollectibleCountRow(
+              date: row.read(collectibles.capturedDate)!,
+              count: row.read(countExpr) ?? 0,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Stream<List<CollectibleWithCollectionRow>>
+      watchCollectiblesWithCollectionByDate(DateTime date) {
+    final startDate = DateTime(date.year, date.month, date.day);
+    final endDate = startDate.add(const Duration(days: 1));
+    final query = select(collectibles).join([
+      innerJoin(collections, collections.id.equalsExp(collectibles.collectionId)),
+    ])
+      ..where(
+        collectibles.capturedDate.isBiggerOrEqualValue(startDate) &
+            collectibles.capturedDate.isSmallerThanValue(endDate),
+      )
+      ..orderBy([
+        OrderingTerm.desc(collectibles.capturedAt),
+        OrderingTerm.desc(collectibles.sortWeight),
+      ]);
+    return query.watch().map(
+      (rows) => rows
+          .map(
+            (row) => CollectibleWithCollectionRow(
+              collection: row.readTable(collections),
+              collectible: row.readTable(collectibles),
+            ),
+          )
+          .toList(),
     );
   }
 }

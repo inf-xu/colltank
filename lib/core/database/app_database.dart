@@ -61,8 +61,11 @@ class AppDatabase extends _$AppDatabase {
   late final CollectiblesDao collectiblesDao = CollectiblesDao(this);
   @override
   late final HighlightSlotsDao highlightSlotsDao = HighlightSlotsDao(this);
+  @override
   late final MetricsDao metricsDao = MetricsDao(this);
+  @override
   late final ExportLogsDao exportLogsDao = ExportLogsDao(this);
+  @override
   late final PreferencesDao preferencesDao = PreferencesDao(this);
 }
 

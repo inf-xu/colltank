@@ -84,6 +84,24 @@ class CollectiblesRepository {
         );
   }
 
+  Stream<List<DailyCollectibleCount>> watchDailyCounts({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _collectiblesDao.watchDailyCounts(start: start, end: end).map(
+          (rows) => rows.map((row) => row.toEntity()).toList(),
+        );
+  }
+
+  Stream<List<CollectibleWithCollection>>
+      watchCollectiblesWithCollectionByDate(DateTime date) {
+    return _collectiblesDao
+        .watchCollectiblesWithCollectionByDate(date)
+        .map(
+          (rows) => rows.map((row) => row.toEntity()).toList(),
+        );
+  }
+
   Future<void> updateMeta({
     required int id,
     String? displayName,

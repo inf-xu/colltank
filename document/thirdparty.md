@@ -64,3 +64,8 @@ flutter pub add crop_your_image
 ```
 flutter pub add gal
 ```
+
+## table_calendar
+```
+flutter pub add table_calendar
+```

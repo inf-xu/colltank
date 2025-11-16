@@ -881,4 +881,560 @@ as DateTime,
 
 }
 
+/// @nodoc
+mixin _$DailyCollectibleCount {
+
+ DateTime get date; int get count;
+/// Create a copy of DailyCollectibleCount
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DailyCollectibleCountCopyWith<DailyCollectibleCount> get copyWith => _$DailyCollectibleCountCopyWithImpl<DailyCollectibleCount>(this as DailyCollectibleCount, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DailyCollectibleCount&&(identical(other.date, date) || other.date == date)&&(identical(other.count, count) || other.count == count));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,date,count);
+
+@override
+String toString() {
+  return 'DailyCollectibleCount(date: $date, count: $count)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DailyCollectibleCountCopyWith<$Res>  {
+  factory $DailyCollectibleCountCopyWith(DailyCollectibleCount value, $Res Function(DailyCollectibleCount) _then) = _$DailyCollectibleCountCopyWithImpl;
+@useResult
+$Res call({
+ DateTime date, int count
+});
+
+
+
+
+}
+/// @nodoc
+class _$DailyCollectibleCountCopyWithImpl<$Res>
+    implements $DailyCollectibleCountCopyWith<$Res> {
+  _$DailyCollectibleCountCopyWithImpl(this._self, this._then);
+
+  final DailyCollectibleCount _self;
+  final $Res Function(DailyCollectibleCount) _then;
+
+/// Create a copy of DailyCollectibleCount
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? count = null,}) {
+  return _then(_self.copyWith(
+date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [DailyCollectibleCount].
+extension DailyCollectibleCountPatterns on DailyCollectibleCount {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DailyCollectibleCount value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DailyCollectibleCount() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DailyCollectibleCount value)  $default,){
+final _that = this;
+switch (_that) {
+case _DailyCollectibleCount():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DailyCollectibleCount value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DailyCollectibleCount() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime date,  int count)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DailyCollectibleCount() when $default != null:
+return $default(_that.date,_that.count);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime date,  int count)  $default,) {final _that = this;
+switch (_that) {
+case _DailyCollectibleCount():
+return $default(_that.date,_that.count);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime date,  int count)?  $default,) {final _that = this;
+switch (_that) {
+case _DailyCollectibleCount() when $default != null:
+return $default(_that.date,_that.count);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _DailyCollectibleCount implements DailyCollectibleCount {
+  const _DailyCollectibleCount({required this.date, required this.count});
+  
+
+@override final  DateTime date;
+@override final  int count;
+
+/// Create a copy of DailyCollectibleCount
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DailyCollectibleCountCopyWith<_DailyCollectibleCount> get copyWith => __$DailyCollectibleCountCopyWithImpl<_DailyCollectibleCount>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DailyCollectibleCount&&(identical(other.date, date) || other.date == date)&&(identical(other.count, count) || other.count == count));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,date,count);
+
+@override
+String toString() {
+  return 'DailyCollectibleCount(date: $date, count: $count)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DailyCollectibleCountCopyWith<$Res> implements $DailyCollectibleCountCopyWith<$Res> {
+  factory _$DailyCollectibleCountCopyWith(_DailyCollectibleCount value, $Res Function(_DailyCollectibleCount) _then) = __$DailyCollectibleCountCopyWithImpl;
+@override @useResult
+$Res call({
+ DateTime date, int count
+});
+
+
+
+
+}
+/// @nodoc
+class __$DailyCollectibleCountCopyWithImpl<$Res>
+    implements _$DailyCollectibleCountCopyWith<$Res> {
+  __$DailyCollectibleCountCopyWithImpl(this._self, this._then);
+
+  final _DailyCollectibleCount _self;
+  final $Res Function(_DailyCollectibleCount) _then;
+
+/// Create a copy of DailyCollectibleCount
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? count = null,}) {
+  return _then(_DailyCollectibleCount(
+date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$CollectibleWithCollection {
+
+ CollectionEntity get collection; CollectibleEntity get collectible;
+/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectibleWithCollectionCopyWith<CollectibleWithCollection> get copyWith => _$CollectibleWithCollectionCopyWithImpl<CollectibleWithCollection>(this as CollectibleWithCollection, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectibleWithCollection&&(identical(other.collection, collection) || other.collection == collection)&&(identical(other.collectible, collectible) || other.collectible == collectible));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,collection,collectible);
+
+@override
+String toString() {
+  return 'CollectibleWithCollection(collection: $collection, collectible: $collectible)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectibleWithCollectionCopyWith<$Res>  {
+  factory $CollectibleWithCollectionCopyWith(CollectibleWithCollection value, $Res Function(CollectibleWithCollection) _then) = _$CollectibleWithCollectionCopyWithImpl;
+@useResult
+$Res call({
+ CollectionEntity collection, CollectibleEntity collectible
+});
+
+
+$CollectionEntityCopyWith<$Res> get collection;$CollectibleEntityCopyWith<$Res> get collectible;
+
+}
+/// @nodoc
+class _$CollectibleWithCollectionCopyWithImpl<$Res>
+    implements $CollectibleWithCollectionCopyWith<$Res> {
+  _$CollectibleWithCollectionCopyWithImpl(this._self, this._then);
+
+  final CollectibleWithCollection _self;
+  final $Res Function(CollectibleWithCollection) _then;
+
+/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? collection = null,Object? collectible = null,}) {
+  return _then(_self.copyWith(
+collection: null == collection ? _self.collection : collection // ignore: cast_nullable_to_non_nullable
+as CollectionEntity,collectible: null == collectible ? _self.collectible : collectible // ignore: cast_nullable_to_non_nullable
+as CollectibleEntity,
+  ));
+}
+/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CollectionEntityCopyWith<$Res> get collection {
+  
+  return $CollectionEntityCopyWith<$Res>(_self.collection, (value) {
+    return _then(_self.copyWith(collection: value));
+  });
+}/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CollectibleEntityCopyWith<$Res> get collectible {
+  
+  return $CollectibleEntityCopyWith<$Res>(_self.collectible, (value) {
+    return _then(_self.copyWith(collectible: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [CollectibleWithCollection].
+extension CollectibleWithCollectionPatterns on CollectibleWithCollection {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CollectibleWithCollection value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CollectibleWithCollection() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CollectibleWithCollection value)  $default,){
+final _that = this;
+switch (_that) {
+case _CollectibleWithCollection():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CollectibleWithCollection value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CollectibleWithCollection() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CollectionEntity collection,  CollectibleEntity collectible)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CollectibleWithCollection() when $default != null:
+return $default(_that.collection,_that.collectible);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CollectionEntity collection,  CollectibleEntity collectible)  $default,) {final _that = this;
+switch (_that) {
+case _CollectibleWithCollection():
+return $default(_that.collection,_that.collectible);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CollectionEntity collection,  CollectibleEntity collectible)?  $default,) {final _that = this;
+switch (_that) {
+case _CollectibleWithCollection() when $default != null:
+return $default(_that.collection,_that.collectible);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _CollectibleWithCollection implements CollectibleWithCollection {
+  const _CollectibleWithCollection({required this.collection, required this.collectible});
+  
+
+@override final  CollectionEntity collection;
+@override final  CollectibleEntity collectible;
+
+/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectibleWithCollectionCopyWith<_CollectibleWithCollection> get copyWith => __$CollectibleWithCollectionCopyWithImpl<_CollectibleWithCollection>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectibleWithCollection&&(identical(other.collection, collection) || other.collection == collection)&&(identical(other.collectible, collectible) || other.collectible == collectible));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,collection,collectible);
+
+@override
+String toString() {
+  return 'CollectibleWithCollection(collection: $collection, collectible: $collectible)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectibleWithCollectionCopyWith<$Res> implements $CollectibleWithCollectionCopyWith<$Res> {
+  factory _$CollectibleWithCollectionCopyWith(_CollectibleWithCollection value, $Res Function(_CollectibleWithCollection) _then) = __$CollectibleWithCollectionCopyWithImpl;
+@override @useResult
+$Res call({
+ CollectionEntity collection, CollectibleEntity collectible
+});
+
+
+@override $CollectionEntityCopyWith<$Res> get collection;@override $CollectibleEntityCopyWith<$Res> get collectible;
+
+}
+/// @nodoc
+class __$CollectibleWithCollectionCopyWithImpl<$Res>
+    implements _$CollectibleWithCollectionCopyWith<$Res> {
+  __$CollectibleWithCollectionCopyWithImpl(this._self, this._then);
+
+  final _CollectibleWithCollection _self;
+  final $Res Function(_CollectibleWithCollection) _then;
+
+/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? collection = null,Object? collectible = null,}) {
+  return _then(_CollectibleWithCollection(
+collection: null == collection ? _self.collection : collection // ignore: cast_nullable_to_non_nullable
+as CollectionEntity,collectible: null == collectible ? _self.collectible : collectible // ignore: cast_nullable_to_non_nullable
+as CollectibleEntity,
+  ));
+}
+
+/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CollectionEntityCopyWith<$Res> get collection {
+  
+  return $CollectionEntityCopyWith<$Res>(_self.collection, (value) {
+    return _then(_self.copyWith(collection: value));
+  });
+}/// Create a copy of CollectibleWithCollection
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CollectibleEntityCopyWith<$Res> get collectible {
+  
+  return $CollectibleEntityCopyWith<$Res>(_self.collectible, (value) {
+    return _then(_self.copyWith(collectible: value));
+  });
+}
+}
+
 // dart format on
