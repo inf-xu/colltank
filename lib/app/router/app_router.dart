@@ -116,15 +116,15 @@ class AppShell extends StatelessWidget {
           onTap: _onTap,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
+              icon: Icon(Icons.home),
               label: '首页',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_outlined),
+              icon: Icon(Icons.calendar_month),
               label: '日历',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
+              icon: Icon(Icons.person),
               label: '我的',
             ),
           ],
