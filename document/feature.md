@@ -114,3 +114,8 @@
 - 新增 `collectionHighlightSlotsProvider` 实时监听 3×3 槽位状态，并与 Drift 高亮表保持同步。
 - 详情页画框区替换为 DragTarget 九宫格，空位提示拖拽指引，投放后调用 `AssignHighlightSlotUsecase` 自动写库。
 - 瀑布流图片支持长按进入拖拽态，桌布展示图片缩略反馈，未设置或丢失文件会给出提示，方便用户定位问题。
+
+## 2025-11-15 首页收集罐缩略图
+- 首页滚轮卡片接入 `collectionHighlightSlotsProvider` 与 `collectibleDetailProvider`，实时渲染 3×3 画框略缩图，还原详情页的画框状态。
+- 卡片内部按槽位逐项解析本地文件路径（支持绝对路径和根目录相对路径），无目录或文件缺失时展示中文提示占位。
+- 原占位栅格升级为真实图片预览，但仍在数据缺失时回退，保障首页体验与性能。
