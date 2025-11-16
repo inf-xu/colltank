@@ -9,6 +9,23 @@ class DailyCollectibleCountRow {
   final int count;
 }
 
+/// Drift 聚合结果：按心情统计数量
+class MoodStatisticRow {
+  MoodStatisticRow({
+    required this.moodCodePoint,
+    required this.moodFontFamily,
+    this.moodPackage,
+    required this.moodColor,
+    required this.count,
+  });
+
+  final int moodCodePoint;
+  final String moodFontFamily;
+  final String? moodPackage;
+  final String moodColor;
+  final int count;
+}
+
 /// Drift 联结结果：收藏记录 + 对应的收集罐信息
 class CollectibleWithCollectionRow {
   CollectibleWithCollectionRow({
@@ -191,6 +208,41 @@ class CollectiblesDao extends DatabaseAccessor<AppDatabase>
           .map(
             (row) => DailyCollectibleCountRow(
               date: row.read(collectibles.capturedDate)!,
+              count: row.read(countExpr) ?? 0,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Stream<List<MoodStatisticRow>> watchMoodStatistics() {
+    final countExpr = collectibles.id.count();
+    final query = selectOnly(collectibles)
+      ..addColumns([
+        collectibles.moodCodePoint,
+        collectibles.moodFontFamily,
+        collectibles.moodPackage,
+        collectibles.moodColor,
+        countExpr,
+      ])
+      ..groupBy([
+        collectibles.moodCodePoint,
+        collectibles.moodFontFamily,
+        collectibles.moodPackage,
+        collectibles.moodColor,
+      ])
+      ..orderBy([
+        OrderingTerm.desc(countExpr),
+        OrderingTerm.asc(collectibles.moodCodePoint),
+      ]);
+    return query.watch().map(
+      (rows) => rows
+          .map(
+            (row) => MoodStatisticRow(
+              moodCodePoint: row.read(collectibles.moodCodePoint)!,
+              moodFontFamily: row.read(collectibles.moodFontFamily) ?? '',
+              moodPackage: row.read(collectibles.moodPackage),
+              moodColor: row.read(collectibles.moodColor) ?? '#FF9E9E9E',
               count: row.read(countExpr) ?? 0,
             ),
           )

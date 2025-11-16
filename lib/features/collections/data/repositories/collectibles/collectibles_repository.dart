@@ -112,4 +112,10 @@ class CollectiblesRepository {
       moodColor: moodColor,
     );
   }
+
+  Stream<List<MoodStatistic>> watchMoodStatistics() {
+    return _collectiblesDao.watchMoodStatistics().map(
+      (rows) => rows.map((row) => row.toEntity()).toList(),
+    );
+  }
 }

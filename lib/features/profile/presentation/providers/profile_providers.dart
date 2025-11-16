@@ -21,3 +21,11 @@ final profileYearlyCountsProvider = StreamProvider<List<DailyCollectibleCount>>(
     return repository.watchDailyCounts(start: start, end: end);
   },
 );
+
+/// 我的页面 - 心情统计
+final profileMoodStatisticsProvider = StreamProvider<List<MoodStatistic>>((
+  ref,
+) {
+  final repository = ref.watch(collectiblesRepositoryProvider);
+  return repository.watchMoodStatistics();
+});

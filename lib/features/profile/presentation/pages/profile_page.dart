@@ -1,4 +1,5 @@
 import 'package:fl_heatmap/fl_heatmap.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,12 +29,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<void> _handleRefresh() async {
     ref.invalidate(profileCollectionsProvider);
     ref.invalidate(profileYearlyCountsProvider);
+    ref.invalidate(profileMoodStatisticsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final collectionsAsync = ref.watch(profileCollectionsProvider);
     final yearlyAsync = ref.watch(profileYearlyCountsProvider);
+    final moodStatsAsync = ref.watch(profileMoodStatisticsProvider);
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('我的'), centerTitle: true),
@@ -45,7 +48,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           children: [
             Text(
-              '今日也要好好记录。',
+              '今日也要好好记录呀～',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -58,6 +61,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _SectionHeader(title: '分类别统计'),
             const SizedBox(height: 12),
             _buildCategorySection(collectionsAsync),
+            const SizedBox(height: 24),
+            _SectionHeader(title: '心情统计'),
+            const SizedBox(height: 12),
+            _buildMoodChart(moodStatsAsync),
             const SizedBox(height: 24),
             _SectionHeader(title: '年度热力图'),
             const SizedBox(height: 12),
@@ -83,6 +90,72 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             final overview = _computeOverview(collections, yearlyCounts);
             return _StatGrid(items: overview);
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildMoodChart(AsyncValue<List<MoodStatistic>> moodStatsAsync) {
+    return moodStatsAsync.when(
+      loading: () => const _SectionLoading(),
+      error: (error, _) => _ErrorCard(message: '心情统计加载失败：$error'),
+      data: (stats) {
+        if (stats.isEmpty) {
+          return const _EmptyCard(message: '暂无心情记录，快去写下当下心情吧');
+        }
+        final total = stats.fold<int>(0, (sum, item) => sum + item.count);
+        final slices = _buildMoodSlices(stats, total);
+        return _CardContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 220,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 60,
+                        sections: [
+                          for (final slice in slices)
+                            PieChartSectionData(
+                              color: slice.color,
+                              value: slice.count.toDouble(),
+                              title: slice.percent >= 12
+                                  ? '${slice.percent.toStringAsFixed(0)}%'
+                                  : '',
+                              titleStyle: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$total 张',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          '已记录心情',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _MoodLegend(slices: slices),
+            ],
+          ),
         );
       },
     );
@@ -230,6 +303,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           color: Colors.teal,
         ),
     ];
+  }
+
+  List<_MoodSlice> _buildMoodSlices(List<MoodStatistic> stats, int totalCount) {
+    final safeTotal = totalCount == 0 ? 1 : totalCount;
+    return stats.map((stat) {
+      final color = parseHexColor(stat.moodColor);
+      final percent = stat.count / safeTotal * 100;
+      return _MoodSlice(
+        icon: _buildMoodIcon(stat),
+        color: color,
+        count: stat.count,
+        percent: percent,
+      );
+    }).toList();
+  }
+
+  IconData _buildMoodIcon(MoodStatistic stat) {
+    final fontFamily = stat.moodFontFamily.isEmpty ? null : stat.moodFontFamily;
+    final fontPackage = (stat.moodPackage?.isEmpty ?? true)
+        ? null
+        : stat.moodPackage;
+    return IconData(
+      stat.moodCodePoint,
+      fontFamily: fontFamily,
+      fontPackage: fontPackage,
+    );
   }
 
   HeatmapData _createYearHeatmapData(
@@ -617,6 +716,72 @@ class ProfileHeatmapItem extends HeatmapItem {
 
   final DateTime date;
   final int count;
+}
+
+class _MoodSlice {
+  const _MoodSlice({
+    required this.icon,
+    required this.color,
+    required this.count,
+    required this.percent,
+  });
+
+  final IconData icon;
+  final Color color;
+  final int count;
+  final double percent;
+}
+
+class _MoodLegend extends StatelessWidget {
+  const _MoodLegend({required this.slices});
+
+  final List<_MoodSlice> slices;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final slice in slices)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: _MoodLegendItem(slice: slice),
+          ),
+      ],
+    );
+  }
+}
+
+class _MoodLegendItem extends StatelessWidget {
+  const _MoodLegendItem({required this.slice});
+
+  final _MoodSlice slice;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: slice.color.withValues(alpha: 0.2),
+          child: Icon(slice.icon, color: slice.color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            '${slice.count} 张',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Text(
+          '${slice.percent.toStringAsFixed(1)} %',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _HeatLegend extends StatelessWidget {

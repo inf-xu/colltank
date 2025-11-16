@@ -178,6 +178,18 @@ extension CollectibleWithCollectionMapper on CollectibleWithCollectionRow {
   }
 }
 
+extension MoodStatisticRowMapper on MoodStatisticRow {
+  MoodStatistic toEntity() {
+    return MoodStatistic(
+      moodCodePoint: moodCodePoint,
+      moodFontFamily: moodFontFamily,
+      moodPackage: moodPackage,
+      moodColor: moodColor,
+      count: count,
+    );
+  }
+}
+
 /// 日历/统计使用的日粒度计数模型
 @freezed
 abstract class DailyCollectibleCount with _$DailyCollectibleCount {
@@ -194,4 +206,21 @@ abstract class CollectibleWithCollection with _$CollectibleWithCollection {
     required CollectionEntity collection,
     required CollectibleEntity collectible,
   }) = _CollectibleWithCollection;
+}
+
+/// 心情统计实体
+class MoodStatistic {
+  const MoodStatistic({
+    required this.moodCodePoint,
+    required this.moodFontFamily,
+    this.moodPackage,
+    required this.moodColor,
+    required this.count,
+  });
+
+  final int moodCodePoint;
+  final String moodFontFamily;
+  final String? moodPackage;
+  final String moodColor;
+  final int count;
 }

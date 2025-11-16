@@ -70,6 +70,11 @@ flutter pub add gal
 flutter pub add table_calendar
 ```
 
+## fl_chart
+```
+flutter pub add fl_chart
+```
+
 ## fl_heatmap
 ```
 flutter pub add fl_heatmap
