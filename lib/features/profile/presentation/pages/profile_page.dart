@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/utils/color_utils.dart';
+import '../../../../shared/utils/mood_icon_utils.dart';
 import '../../../collections/domain/entities/collection_models.dart';
 import '../providers/profile_providers.dart';
 
@@ -318,14 +319,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   IconData _buildMoodIcon(MoodStatistic stat) {
-    final fontFamily = stat.moodFontFamily.isEmpty ? null : stat.moodFontFamily;
-    final fontPackage = (stat.moodPackage?.isEmpty ?? true)
-        ? null
-        : stat.moodPackage;
-    return IconData(
-      stat.moodCodePoint,
-      fontFamily: fontFamily,
-      fontPackage: fontPackage,
+    return resolveMoodIcon(
+      codePoint: stat.moodCodePoint,
+      fontFamily: stat.moodFontFamily,
+      fontPackage: stat.moodPackage,
     );
   }
 

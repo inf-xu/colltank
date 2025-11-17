@@ -9,6 +9,7 @@ import 'package:colltank/shared/providers/preferences_providers.dart';
 import '../../domain/entities/collection_models.dart';
 import '../providers/detail_providers.dart';
 import '../../../../app/providers/global_providers.dart';
+import '../../../../shared/utils/mood_icon_utils.dart';
 
 class CollectibleDetailPage extends ConsumerWidget {
   const CollectibleDetailPage({super.key, required this.collectibleId});
@@ -116,12 +117,16 @@ class _CollectibleDetailBody extends StatelessWidget {
         (absolutePath != null && File(absolutePath).existsSync())
         ? absolutePath
         : null;
-    final preset = _findMoodPreset(collectible.moodCodePoint);
+    final preset = findMoodPreset(collectible.moodCodePoint);
     final defaultColor =
         preset?.color ??
         (collectible.moodColor.isEmpty ? '#FFFFC107' : collectible.moodColor);
     final moodColor = parseHexColor(defaultColor);
-    final moodIcon = preset?.icon ?? _resolveMoodIcon(collectible);
+    final moodIcon = resolveMoodIcon(
+      codePoint: collectible.moodCodePoint,
+      fontFamily: collectible.moodFontFamily,
+      fontPackage: collectible.moodPackage,
+    );
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -245,48 +250,6 @@ String? _resolveAbsolutePath(String? rootDirectory, String relativePath) {
   return p.join(rootDirectory, relativePath);
 }
 
-IconData _resolveMoodIcon(CollectibleEntity collectible) {
-  final fontFamily = (collectible.moodFontFamily.isNotEmpty)
-      ? collectible.moodFontFamily
-      : 'MaterialIcons';
-  final fontPackage =
-      (collectible.moodPackage != null && collectible.moodPackage!.isNotEmpty)
-      ? collectible.moodPackage
-      : (fontFamily.contains('Cupertino') ? 'cupertino_icons' : null);
-  return IconData(
-    collectible.moodCodePoint,
-    fontFamily: fontFamily,
-    fontPackage: fontPackage,
-  );
-}
-
-class _MoodPreset {
-  const _MoodPreset({required this.icon, required this.color});
-
-  final IconData icon;
-  final String color;
-}
-
-const _moodPresets = [
-  _MoodPreset(icon: Icons.favorite, color: '#FFEF5350'),
-  _MoodPreset(icon: Icons.star, color: '#FFFFD54F'),
-  _MoodPreset(icon: Icons.face_retouching_natural, color: '#FF64B5F6'),
-  _MoodPreset(icon: Icons.nightlight_round, color: '#FF9575CD'),
-  _MoodPreset(icon: Icons.wb_sunny, color: '#FFFFB74D'),
-  _MoodPreset(icon: Icons.emoji_nature, color: '#FFA5D6A7'),
-  _MoodPreset(icon: Icons.emoji_emotions, color: '#FFFFE082'),
-  _MoodPreset(icon: Icons.emoji_food_beverage, color: '#FF8D6E63'),
-];
-
-_MoodPreset? _findMoodPreset(int codePoint) {
-  for (final preset in _moodPresets) {
-    if (preset.icon.codePoint == codePoint) {
-      return preset;
-    }
-  }
-  return null;
-}
-
 Future<void> _showEditSheet(
   BuildContext context, {
   required WidgetRef ref,
@@ -295,7 +258,7 @@ Future<void> _showEditSheet(
 }) async {
   final nameController = TextEditingController(text: collectible.displayName);
   final storyController = TextEditingController(text: collectible.story ?? '');
-  final moodOptions = _moodPresets;
+  final moodOptions = kMoodPresets;
   var selectedCodePoint = collectible.moodCodePoint;
   var selectedFontFamily = collectible.moodFontFamily;
   var selectedFontPackage = collectible.moodPackage;

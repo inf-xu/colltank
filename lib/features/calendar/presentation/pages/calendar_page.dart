@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../shared/utils/color_utils.dart';
+import '../../../../shared/utils/mood_icon_utils.dart';
 import '../../../collections/domain/entities/collection_models.dart';
 import '../../domain/entities/calendar_entities.dart';
 import '../providers/calendar_providers.dart';
@@ -334,16 +335,7 @@ class _CategoryPanel extends StatelessWidget {
                     .map(
                       (item) => ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          backgroundColor: _resolveColor(
-                            item.moodColor,
-                            accent,
-                          ).withValues(alpha: 0.15),
-                          child: Icon(
-                            _resolveMoodIcon(item),
-                            color: _resolveColor(item.moodColor, accent),
-                          ),
-                        ),
+                        leading: _MoodAvatar(collectible: item, accent: accent),
                         title: Text(
                           item.displayName,
                           style: TextStyle(color: Colors.white),
@@ -400,18 +392,25 @@ Color _resolveColor(String? hex, Color fallback) {
   }
 }
 
-IconData _resolveMoodIcon(CollectibleEntity collectible) {
-  final fontFamily = collectible.moodFontFamily.isNotEmpty
-      ? collectible.moodFontFamily
-      : 'MaterialIcons';
-  final fontPackage = (collectible.moodPackage?.isNotEmpty ?? false)
-      ? collectible.moodPackage
-      : (fontFamily.contains('Cupertino') ? 'cupertino_icons' : null);
-  return IconData(
-    collectible.moodCodePoint,
-    fontFamily: fontFamily,
-    fontPackage: fontPackage,
-  );
+class _MoodAvatar extends StatelessWidget {
+  const _MoodAvatar({required this.collectible, required this.accent});
+
+  final CollectibleEntity collectible;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _resolveColor(collectible.moodColor, accent);
+    final icon = resolveMoodIcon(
+      codePoint: collectible.moodCodePoint,
+      fontFamily: collectible.moodFontFamily,
+      fontPackage: collectible.moodPackage,
+    );
+    return CircleAvatar(
+      backgroundColor: color.withValues(alpha: 0.15),
+      child: Icon(icon, color: color),
+    );
+  }
 }
 
 String _normalizeStory(String? story) {
