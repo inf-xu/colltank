@@ -869,14 +869,6 @@ class _DragPreview extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            // border: Border.all(color: Colors.white, width: 2),
-            // boxShadow: const [
-            //   BoxShadow(
-            //     color: Colors.black38,
-            //     blurRadius: 12,
-            //     offset: Offset(0, 6),
-            //   ),
-            // ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -927,8 +919,8 @@ class _EmptyGalleryPlaceholder extends StatelessWidget {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.photo_library_outlined, size: 48),
+        children: [
+          Icon(Icons.photo_library_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
           SizedBox(height: 12),
           Text('还没有图片，点击右下角上传'),
         ],

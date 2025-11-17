@@ -715,7 +715,6 @@ class _AddCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white70, width: 2),
         ),
         child: SizedBox.expand(
           child: Card(

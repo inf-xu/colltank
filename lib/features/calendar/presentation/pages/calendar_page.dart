@@ -367,7 +367,7 @@ class _EmptyHint extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.emoji_food_beverage_outlined, size: 48),
+          Icon(Icons.emoji_food_beverage_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 12),
           Text('这天还没有收藏记录', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),

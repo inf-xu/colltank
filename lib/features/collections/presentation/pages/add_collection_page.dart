@@ -377,13 +377,16 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
               children: [
                 const SizedBox(height: 8),
                 Center(
-                  child: CircleAvatar(
-                    radius: 36,
-                    backgroundColor: Colors.amber.withValues(alpha: 0.2),
-                    child: Icon(
-                      _isEdit ? Icons.edit : Icons.add,
-                      color: Colors.amber,
-                      size: 32,
+                  child: Tooltip(
+                    message: _isEdit ? '当前为编辑模式' : '下方添加收集罐信息',
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Colors.amber.withValues(alpha: 0.2),
+                      child: Icon(
+                        _isEdit ? Icons.edit : Icons.add,
+                        color: Colors.amber,
+                        size: 32,
+                      ),
                     ),
                   ),
                 ),
@@ -391,9 +394,10 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: '类别名称',
+                    labelText: '类别名称（限制20字）',
                     border: OutlineInputBorder(),
                     floatingLabelAlignment: FloatingLabelAlignment.start,
+                    alignLabelWithHint: true,
                   ),
                   readOnly: _isEdit,
                   enabled: !_isEdit,
@@ -431,7 +435,13 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                Text('卡片主题颜色', style: theme.textTheme.titleSmall),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text('卡片主题颜色', style: theme.textTheme.titleMedium),
+                    Text('（尽量选择深色系）', style: theme.textTheme.titleSmall?.copyWith(color: Colors.grey))
+                  ],
+                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 12,
@@ -445,6 +455,9 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                     onPressed: _isSaving ? null : _handleSubmit,
                     child: _isSaving
                         ? const SizedBox(
@@ -452,7 +465,7 @@ class _AddCollectionPageState extends ConsumerState<AddCollectionPage> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(_isEdit ? '更新' : '保存'),
+                        : Text(_isEdit ? '更新' : '保存', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),),
                   ),
                 ),
               ],
