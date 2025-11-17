@@ -1,4 +1,4 @@
-package com.example.colltank
+package top.daisylike.colltank
 
 import io.flutter.embedding.android.FlutterActivity
 
