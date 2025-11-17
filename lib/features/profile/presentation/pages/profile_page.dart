@@ -274,7 +274,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         title: '收藏罐',
         value: '$totalCollections',
         subtitle: totalCollections == 0
-            ? '创建第一个收藏罐，开启仪式感'
+            ? '开启仪式感'
             : '当前已有 $totalCollections 个分类',
         icon: Icons.inventory_2_outlined,
         color: Colors.green,
@@ -282,7 +282,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _StatItem(
         title: '图片总量',
         value: '$totalPhotos',
-        subtitle: totalPhotos == 0 ? '还没有照片被收纳' : '累计整理 $totalPhotos 张',
+        subtitle: totalPhotos == 0 ? '写下藏品故事' : '累计整理 $totalPhotos 张',
         icon: Icons.photo_library_outlined,
         color: Colors.deepOrange,
       ),
@@ -293,14 +293,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         icon: Icons.calendar_today_outlined,
         color: Colors.purple,
       ),
-      if (topCollections.isNotEmpty)
-        _StatItem(
-          title: '最满的罐子',
-          value: topCollections.first.name,
-          subtitle: '已有 ${topCollections.first.itemCount} 张',
-          icon: Icons.emoji_events_outlined,
-          color: Colors.teal,
-        ),
+      _StatItem(
+        title: '最满的罐子',
+        value: topCollections.isNotEmpty ? topCollections.first.name : '0',
+        subtitle: topCollections.isNotEmpty ? '已有 ${topCollections.first.itemCount} 张' : '暂未记录',
+        icon: Icons.emoji_events_outlined,
+        color: Colors.teal,
+      ),
     ];
   }
 
