@@ -33,17 +33,5 @@ IconData resolveMoodIcon({
   if (preset != null) {
     return preset.icon;
   }
-  final normalizedFamily = (fontFamily == null || fontFamily.isEmpty)
-      ? 'MaterialIcons'
-      : fontFamily;
-  final normalizedPackage = (fontPackage != null && fontPackage.isNotEmpty)
-      ? fontPackage
-      : (normalizedFamily.toLowerCase().contains('cupertino')
-            ? 'cupertino_icons'
-            : null);
-  return IconData(
-    codePoint,
-    fontFamily: normalizedFamily,
-    fontPackage: normalizedPackage,
-  );
+  return Icons.error;
 }
