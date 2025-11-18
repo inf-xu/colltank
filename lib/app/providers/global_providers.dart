@@ -14,6 +14,7 @@ import '../../features/collections/domain/usecases/collections/switch_frame_styl
 import '../../features/collections/domain/usecases/collections/update_cover_preview_usecase.dart';
 import '../../features/collections/domain/usecases/collections/update_collection_usecase.dart';
 import '../../features/collections/domain/usecases/collectibles/add_collectible_usecase.dart';
+import '../../features/collections/domain/usecases/collectibles/delete_collectible_usecase.dart';
 import '../../features/collections/domain/usecases/collectibles/toggle_collectible_highlight_usecase.dart';
 import '../../features/collections/domain/usecases/highlight_slots/assign_highlight_slot_usecase.dart';
 import '../../features/collections/domain/usecases/highlight_slots/reset_highlight_slots_usecase.dart';
@@ -109,6 +110,14 @@ final addCollectibleUsecaseProvider = Provider<AddCollectibleUsecase>((ref) {
     ref.watch(metricsRepositoryProvider),
   );
 });
+
+final deleteCollectibleUsecaseProvider =
+    Provider<DeleteCollectibleUsecase>((ref) {
+      return DeleteCollectibleUsecase(
+        ref.watch(collectiblesRepositoryProvider),
+        ref.watch(metricsRepositoryProvider),
+      );
+    });
 
 final toggleCollectibleHighlightUsecaseProvider =
     Provider<ToggleCollectibleHighlightUsecase>((ref) {

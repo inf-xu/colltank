@@ -56,8 +56,8 @@ class CollectibleDetailPage extends ConsumerWidget {
                   ) ??
                   false;
               if (!confirmed || !context.mounted) return;
-              final repo = ref.read(collectiblesRepositoryProvider);
-              await repo.deleteByIds([collectible.id!]);
+              final deleteUsecase = ref.read(deleteCollectibleUsecaseProvider);
+              await deleteUsecase.call(collectible);
               if (!context.mounted) return;
               Navigator.of(context).pop();
               ScaffoldMessenger.of(

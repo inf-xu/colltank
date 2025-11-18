@@ -79,3 +79,9 @@ flutter pub add fl_chart
 ```
 flutter pub add fl_heatmap
 ```
+
+## flutter_launcher_icons
+```
+flutter pub add flutter_launcher_icons --dev
+flutter pub run flutter_launcher_icons
+```

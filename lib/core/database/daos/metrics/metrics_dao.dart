@@ -23,6 +23,9 @@ class MetricsDao extends DatabaseAccessor<AppDatabase>
       final query = select(collectionDailyMetrics)..where(filter);
       final existing = await query.getSingleOrNull();
       if (existing == null) {
+        if (deltaCount <= 0) {
+          return;
+        }
         await into(collectionDailyMetrics).insert(
           CollectionDailyMetricsCompanion(
             collectionId: Value(collectionId),
@@ -33,9 +36,14 @@ class MetricsDao extends DatabaseAccessor<AppDatabase>
           ),
         );
       } else {
+        final newCount = existing.itemCount + deltaCount;
+        if (newCount <= 0) {
+          await (delete(collectionDailyMetrics)..where(filter)).go();
+          return;
+        }
         await (update(collectionDailyMetrics)..where(filter)).write(
           CollectionDailyMetricsCompanion(
-            itemCount: Value(existing.itemCount + deltaCount),
+            itemCount: Value(newCount),
             firstCollectibleId:
                 Value(firstCollectibleId ?? existing.firstCollectibleId),
             lastCollectibleId: Value(lastCollectibleId),
